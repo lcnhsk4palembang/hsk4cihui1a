@@ -1,0 +1,1763 @@
+<!doctype html>
+<html lang="zh" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HSK 4 互动填空游戏</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&amp;family=Poppins:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+  <script src="/_sdk/element_sdk.js"></script>
+  <style>
+    body {
+      box-sizing: border-box;
+    }
+    
+    * {
+      font-family: 'Poppins', 'Noto Sans SC', sans-serif;
+    }
+    
+    .hanzi {
+      font-family: 'Noto Sans SC', sans-serif;
+    }
+    
+    .drop-zone {
+      min-width: 60px;
+      min-height: 44px;
+      border: 2px dashed #94a3b8;
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 4px;
+      transition: all 0.3s ease;
+      background: #f8fafc;
+    }
+    
+    .drop-zone.drag-over {
+      border-color: #3b82f6;
+      background: #dbeafe;
+      transform: scale(1.05);
+    }
+    
+    .drop-zone.filled {
+      border-style: solid;
+      border-color: #3b82f6;
+      background: #eff6ff;
+    }
+    
+    .answer-card {
+      cursor: grab;
+      user-select: none;
+      transition: all 0.2s ease;
+    }
+    
+    .answer-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+    
+    .answer-card:active {
+      cursor: grabbing;
+      transform: scale(0.95);
+    }
+    
+    .answer-card.selected {
+      transform: scale(0.9);
+      opacity: 0.5;
+    }
+    
+    .answer-card.correct {
+      background: linear-gradient(135deg, #10b981, #059669) !important;
+      color: white;
+      animation: correctPulse 0.5s ease;
+    }
+    
+    .answer-card.incorrect {
+      background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+      color: white;
+      animation: shake 0.5s ease;
+    }
+    
+    @keyframes correctPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+    
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
+    
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .fade-in-up {
+      animation: fadeInUp 0.4s ease forwards;
+    }
+    
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateX(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+    
+    .slide-in {
+      animation: slideIn 0.3s ease forwards;
+    }
+    
+    .progress-fill {
+      transition: width 0.5s ease;
+    }
+    
+    .timer-warning {
+      animation: pulse 1s infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+    
+    .glass-card {
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+    }
+    
+    .gradient-bg {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .soft-shadow {
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    }
+  </style>
+  <style>@view-transition { navigation: auto; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ </head>
+ <body class="h-full bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 overflow-auto">
+  <div id="app" class="min-h-full w-full"><!-- Start Screen -->
+   <div id="start-screen" class="min-h-full flex items-center justify-center p-4">
+    <div class="glass-card rounded-3xl p-8 md:p-12 max-w-2xl w-full text-center soft-shadow">
+     <div class="mb-6">
+      <div class="w-20 h-20 mx-auto mb-4 rounded-2xl gradient-bg flex items-center justify-center"><span class="text-4xl">📚</span>
+      </div>
+      <h1 id="main-title" class="hanzi text-3xl md:text-4xl font-bold text-gray-800 mb-2">HSK 4 互动填空游戏</h1>
+      <p class="text-gray-500 text-lg">LCN Palembang-08994477998</p>
+     </div>
+     <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 mb-8">
+      <div class="grid grid-cols-3 gap-4 text-center">
+       <div>
+        <div class="text-2xl font-bold text-blue-600">
+         100
+        </div>
+        <div class="text-sm text-gray-500">
+         Soal
+        </div>
+       </div>
+       <div>
+        <div class="text-2xl font-bold text-purple-600">
+         80
+        </div>
+        <div class="text-sm text-gray-500">
+         Menit
+        </div>
+       </div>
+       <div>
+        <div class="text-2xl font-bold text-indigo-600">
+         10
+        </div>
+        <div class="text-sm text-gray-500">
+         Halaman
+        </div>
+       </div>
+      </div>
+     </div>
+     <div class="mb-8"><label class="block text-gray-600 mb-3 font-medium">Pilih Paket:</label>
+      <div class="grid grid-cols-5 gap-2" id="packet-selector"><!-- Packets generated by JS -->
+      </div>
+     </div><button id="start-btn" class="w-full py-4 px-8 bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold rounded-xl hover:from-blue-600 hover:to-indigo-700 transition-all transform hover:scale-105 shadow-lg hover:shadow-xl text-lg">      Mulai Permainan </button>
+     <p class="text-gray-400 text-sm mt-4">Drag &amp; drop atau klik jawaban yang benar</p>
+    </div>
+   </div><!-- Game Screen -->
+   <div id="game-screen" class="hidden min-h-full flex flex-col"><!-- Header -->
+    <header class="bg-white/80 backdrop-blur-md border-b border-gray-100 sticky top-0 z-50">
+     <div class="max-w-4xl mx-auto px-4 py-3">
+      <div class="flex items-center justify-between mb-3">
+       <div class="flex items-center gap-3"><span class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-3 py-1 rounded-lg text-sm font-medium"> Paket <span id="current-packet">1</span> </span> <span class="text-gray-400">|</span> <span class="text-gray-600 font-medium">Halaman <span id="current-page">1</span>/10</span>
+       </div>
+       <div id="timer" class="flex items-center gap-2 bg-gray-100 px-4 py-2 rounded-xl">
+        <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg><span id="timer-display" class="font-mono font-semibold text-gray-700">80:00</span>
+       </div>
+      </div><!-- Progress Bar -->
+      <div class="flex items-center gap-3"><span class="text-sm text-gray-500 font-medium">Progress:</span>
+       <div class="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+        <div id="progress-bar" class="h-full bg-gradient-to-r from-blue-500 to-indigo-600 progress-fill" style="width: 0%"></div>
+       </div><span id="progress-text" class="text-sm font-semibold text-gray-600">0/100</span>
+      </div>
+     </div>
+    </header><!-- Main Content -->
+    <main class="flex-1 max-w-4xl mx-auto w-full px-4 py-6">
+     <div id="question-container"><!-- Questions rendered here -->
+     </div>
+    </main><!-- Navigation -->
+    <footer class="bg-white/80 backdrop-blur-md border-t border-gray-100 sticky bottom-0">
+     <div class="max-w-4xl mx-auto px-4 py-4">
+      <div class="flex items-center justify-between">
+       <div class="flex items-center gap-4">
+        <div class="flex items-center gap-2"><span class="w-3 h-3 bg-green-500 rounded-full"></span> <span class="text-sm text-gray-600">Benar: <span id="correct-count" class="font-bold text-green-600">0</span></span>
+        </div>
+        <div class="flex items-center gap-2"><span class="w-3 h-3 bg-red-500 rounded-full"></span> <span class="text-sm text-gray-600">Salah: <span id="wrong-count" class="font-bold text-red-600">0</span></span>
+        </div>
+       </div>
+       <div class="flex gap-3"><button id="next-question-btn" class="hidden px-6 py-2 bg-blue-500 text-white font-medium rounded-xl hover:bg-blue-600 transition-all"> Soal Berikutnya ▶ </button> <button id="next-page-btn" class="hidden px-6 py-2 bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-medium rounded-xl hover:from-purple-600 hover:to-indigo-700 transition-all"> Halaman Berikutnya ⏭ </button>
+       </div>
+      </div>
+     </div>
+    </footer>
+   </div><!-- Results Screen -->
+   <div id="results-screen" class="hidden min-h-full flex items-center justify-center p-4">
+    <div class="glass-card rounded-3xl p-8 md:p-12 max-w-2xl w-full text-center soft-shadow">
+     <div class="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-r from-green-400 to-emerald-500 flex items-center justify-center"><span class="text-5xl">🏆</span>
+     </div>
+     <h2 class="hanzi text-3xl font-bold text-gray-800 mb-2">游戏结束！</h2>
+     <p class="text-gray-500 mb-8">Permainan Selesai!</p>
+     <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 mb-8">
+      <div class="grid grid-cols-2 gap-6">
+       <div class="text-center">
+        <div id="final-score" class="text-4xl font-bold text-blue-600">
+         0
+        </div>
+        <div class="text-gray-500">
+         Total Skor
+        </div>
+       </div>
+       <div class="text-center">
+        <div id="final-time" class="text-4xl font-bold text-purple-600">
+         00:00
+        </div>
+        <div class="text-gray-500">
+         Waktu
+        </div>
+       </div>
+      </div>
+     </div>
+     <div class="grid grid-cols-2 gap-4 mb-8">
+      <div class="bg-green-50 rounded-xl p-4">
+       <div id="final-correct" class="text-3xl font-bold text-green-600">
+        0
+       </div>
+       <div class="text-green-600">
+        Jawaban Benar
+       </div>
+      </div>
+      <div class="bg-red-50 rounded-xl p-4">
+       <div id="final-wrong" class="text-3xl font-bold text-red-600">
+        0
+       </div>
+       <div class="text-red-600">
+        Jawaban Salah
+       </div>
+      </div>
+     </div>
+     <div class="flex gap-4"><button id="restart-btn" class="flex-1 py-4 px-8 bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold rounded-xl hover:from-blue-600 hover:to-indigo-700 transition-all shadow-lg"> 🔄 Main Lagi </button> <button id="home-btn" class="flex-1 py-4 px-8 bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-gray-200 transition-all"> 🏠 Menu Utama </button>
+     </div>
+    </div>
+   </div>
+  </div>
+  <script>
+    // HSK 4 Question Bank - 100 Questions (Complete with all option explanations)
+    const questionBank = [
+      { id: 1, sentence: "我每天晚上都去操场______半个小时步。", answer: "跑", distractors: ["走", "骑", "游"], pinyin: "pǎo", meaning: "berlari", explanation: "'跑步' adalah kolokasi yang tepat untuk aktivitas lari/jogging di lapangan.", 
+        optionExplanations: {
+          "跑": "✓ Benar - '跑步' (pǎobù) adalah frasa tetap untuk jogging/lari",
+          "走": "✗ '走步' bukan kolokasi yang umum dalam bahasa Mandarin",
+          "骑": "✗ '骑' (qí) berarti naik/mengendarai, tidak cocok dengan konteks",
+          "游": "✗ '游' (yóu) untuk berenang, bukan untuk aktivitas di lapangan"
+        }
+      },
+      { id: 2, sentence: "周末我喜欢在家______电视，放松一下。", answer: "看", distractors: ["听", "玩", "做", "  ", "开"], pinyin: "kàn", meaning: "menonton", explanation: "'看电视' adalah frasa standar untuk menonton televisi sebagai relaksasi.",
+        optionExplanations: {
+          "看": "✓ Benar - '看电视' (kàn diànshì) adalah kolokasi tetap untuk menonton TV",
+          "听": "✗ '听' (tīng) untuk mendengar, biasanya '听音乐' bukan '听电视'",
+          "玩": "✗ '玩' (wán) untuk bermain, tidak tepat untuk TV",
+          "做": "✗ '做' (zuò) berarti membuat/mengerjakan, tidak cocok",
+          "用": "✗ '用' (yòng) berarti menggunakan, terlalu umum",
+          "开": "✗ '开' (kāi) berarti membuka/menyalakan, bukan untuk aktivitas menonton"
+        }
+      },
+      { id: 3, sentence: "他的汉语______得真好，听起来像本地人。", answer: "发音", distractors: ["说话", "表达", "讲", "念", "读"], pinyin: "fāyīn", meaning: "pengucapan", explanation: "'发音' merujuk pada cara mengucapkan yang terdengar seperti penutur asli.",
+        optionExplanations: {
+          "发音": "✓ Benar - '发音' (fāyīn) merujuk pada pelafalan/pengucapan yang bagus",
+          "说话": "✗ '说话' (shuōhuà) terlalu umum, tidak spesifik tentang kualitas suara",
+          "表达": "✗ '表达' (biǎodá) berarti mengekspresikan, bukan tentang suara",
+          "讲": "✗ '讲' (jiǎng) berarti berbicara/menceritakan, kurang tepat",
+          "念": "✗ '念' (niàn) berarti membaca dengan suara, tidak sesuai konteks",
+          "读": "✗ '读' (dú) berarti membaca, bukan untuk kemampuan berbicara alami"
+        }
+      },
+      { id: 4, sentence: "这个______太复杂了，我看不懂说明  。", answer: "节目", distractors: ["机器", "计划", "问题", "方法", "过程"], pinyin: "jiémù", meaning: "program", explanation: "'节目' dengan buku petunjuk yang kompleks menunjukkan program yang sulit dipahami.",
+        optionExplanations: {
+          "节目": "✓ Benar - '节目' (jiémù) cocok dengan konteks 'buku petunjuk' yang rumit",
+          "机器": "✗ '机器' (jīqì) mesin, tapi biasanya tidak dikatakan '看不懂说明书'",
+          "计划": "✗ '计划' (jìhuà) adalah rencana, tidak ada 'buku petunjuk' untuk rencana",
+          "问题": "✗ '问题' (wèntí) adalah masalah, tidak tepat dengan 'buku petunjuk'",
+          "方法": "✗ '方法' (fāngfǎ) adalah metode, tidak cocok",
+          "过程": "✗ '过程' (guòchéng) adalah proses, tidak sesuai konteks"
+        }
+      },
+      { id: 5, sentence: "妈妈______我明天早点起床去机场。", answer: "提醒", distractors: ["告诉", "叫", "让", "要求", "命令"], pinyin: "tíxǐng", meaning: "mengingatkan", explanation: "'提醒' berarti mengingatkan seseorang untuk melakukan sesuatu.",
+        optionExplanations: {
+          "提醒": "✓ Benar - '提醒' (tíxǐng) artinya mengingatkan dengan lembut",
+          "告诉": "✗ '告诉' (gàosu) berarti memberitahu, tapi kurang tepat untuk konteks ini",
+          "叫": "✗ '叫' (jiào) berarti memanggil/menyuruh, terlalu kasar",
+          "让": "✗ '让' (ràng) berarti membiarkan/menyuruh, tidak sesuai",
+          "要求": "✗ '要求' (yāoqiú) berarti meminta/menuntut, terlalu formal",
+          "命令": "✗ '命令' (mìnglìng) berarti memerintah, terlalu keras"
+        }
+      },
+      { id: 6, sentence: "他对中国历史非常______，知道很多故事。", answer: "感兴趣", distractors: ["喜欢", "了解", "熟悉", "关心", "重视"], pinyin: "gǎn xìngqù", meaning: "tertarik", explanation: "'感兴趣' menunjukkan ketertarikan yang mendalam terhadap sesuatu.",
+        optionExplanations: {
+          "感兴趣": "✓ Benar - '对...感兴趣' adalah pola tetap untuk menyatakan ketertarikan",
+          "喜欢": "✗ '喜欢' tidak menggunakan '对' di depannya dalam konteks ini",
+          "了解": "✗ '了解' berarti memahami, bukan tertarik",
+          "熟悉": "✗ '熟悉' berarti akrab/familiar, tidak cocok dengan 'tahu banyak cerita'",
+          "关心": "✗ '关心' berarti peduli, tidak tepat untuk konteks hobi/minat",
+          "重视": "✗ '重视' berarti menghargai/memandang penting, terlalu formal"
+        }
+      },
+      { id: 7, sentence: "图书馆里很安静，请大家不要______。", answer: "说话", distractors: ["吵", "叫", "喊", "闹", "聊"], pinyin: "shuōhuà", meaning: "berbicara", explanation: "'说话' adalah kata yang paling umum untuk meminta orang tidak berbicara di perpustakaan.",
+        optionExplanations: {
+          "说话": "✓ Benar - '说话' adalah cara sopan meminta orang diam di perpustakaan",
+          "吵": "✗ '    ' berarti berisik/ribut, terlalu kasar untuk konteks ini",
+          "叫": "✗ '叫' berarti berteriak/memanggil, terlalu spesifik",
+          "喊": "✗ '喊' berarti berteriak keras, tidak cocok",
+          "闹": "✗ '闹' berarti membuat keributan, terlalu keras",
+          "聊": "✗ '聊' (mengobrol) kurang formal untuk larangan di perpustakaan"
+        }
+      },
+      { id: 8, sentence: "我______坐地铁上班，因为不会堵车。", answer: "总是", distractors: ["经常", "常常", "一直", "永远", "习  "], pinyin: "zǒngshì", meaning: "selalu", explanation: "'总是' menunjukkan kebiasaan yang konsisten tanpa pengecualian.",
+        optionExplanations: {
+          "总是": "✓ Benar - '总是' menunjukkan kebiasaan konsisten setiap hari",
+          "经常": "✗ '经常' (sering) masih ada kemungkinan tidak naik metro",
+          "常常": "✗ '常常' sama dengan '经常', tidak menunjukkan konsistensi mutlak",
+          "一直": "✗ '一直' lebih untuk tindakan berkelanjutan, bukan kebiasaan harian",
+          "永远": "✗ '永远' berarti selamanya, terlalu dramatis untuk konteks ini",
+          "习惯": "✗ '习惯' adalah kata benda, perlu '习惯于' untuk menjadi kata kerja"
+        }
+      },
+      { id: 9, sentence: "请你______一下这两个苹果，哪个更甜？", answer: "尝", distractors: ["试", "吃", "看", "比", "选"], pinyin: "cháng", meaning: "mencoba/merasakan", explanation: "'尝' berarti mencicipi untuk mengetahui rasa.",
+        optionExplanations: {
+          "尝": "✓ Benar - '尝' artinya mencicipi untuk mengetahui rasa",
+          "试": "✗ '试' untuk mencoba secara umum, bukan untuk rasa",
+          "吃": "✗ '吃' terlalu umum, tidak spesifik untuk mencicipi",
+          "看": "✗ '看' untuk melihat, tidak bisa mengetahui rasa dengan melihat",
+          "比": "✗ '比' untuk membandingkan, tapi butuh objek perbandingan",
+          "选": "✗ '选' untuk memilih, belum mencicipi"
+        }
+      },
+      { id: 10, sentence: "听到这个好消息，他______得跳了起来。", answer: "高兴", distractors: ["开心", "快乐", "兴奋", "激动", "幸福"], pinyin: "gāoxìng", meaning: "senang", explanation: "'高兴' menggambarkan kegembiraan yang membuat seseorang melompat.",
+        optionExplanations: {
+          "高兴": "✓ Benar - '高兴得跳起来' adalah kolokasi umum untuk sangat senang",
+          "开心": "✗ '开心' biasanya tidak diikuti dengan '得' dalam struktur ini",
+          "快乐": "✗ '快乐' lebih untuk kebahagiaan jangka panjang, bukan reaksi spontan",
+          "兴奋": "✗ '兴奋' lebih tepat tapi '高兴' lebih umum digunakan",
+          "激动": "✗ '激动' berarti tergerak/emosional, tidak selalu positif",
+          "幸福": "✗ '幸福' untuk kebahagiaan mendalam, terlalu kuat untuk konteks ini"
+        }
+      },
+      
+      { id: 11, sentence: "我______下个月开始学习弹钢琴。", answer: "计划", distractors: ["打算", "准备", "想", "要", "决定"], pinyin: "jìhuà", meaning: "merencanakan", explanation: "'计划' menunjukkan rencana yang sudah disusun untuk masa depan.",
+        optionExplanations: {
+          "计划": "✓ Benar - '计划' menunjukkan rencana yang terstruktur untuk masa depan",
+          "打算": "✗ '打算' lebih informal, kurang terstruktur dari '计划'",
+          "准备": "✗ '准备' berarti mempersiapkan, terlalu umum",
+          "想": "✗ '想' hanya menunjukkan keinginan, belum rencana pasti",
+          "要": "✗ '要' terlalu langsung, kurang menunjukkan perencanaan",
+          "决   ": "✗ '决定' berarti memutuskan, bukan merencanakan"
+        }
+      },
+      { id: 12, sentence: "天气突然______，我们不得不取消野餐。", answer: "变化", distractors: ["改变", "转变", "变坏", "变冷", "下雨"], pinyin: "biànhuà", meaning: "berubah", explanation: "'变化' menunjukkan perubahan cuaca yang tiba-tiba.",
+        optionExplanations: {
+          "变化": "✓ Benar - '天气变化' adalah kolokasi umum untuk perubahan cuaca mendadak",
+          "改变": "✗ '改变' lebih untuk perubahan yang disengaja, bukan alami",
+          "转变": "✗ '转变' untuk perubahan signifikan/transformasi, terlalu formal",
+          "变坏": "✗ '变坏' terlalu spesifik (menjadi buruk), tidak netral",
+          "变冷": "✗ '变冷' terlalu spesifik (menjadi dingin), tidak umum",
+          "下雨": "✗ '下雨' adalah kata kerja spesifik, bukan perubahan umum"
+        }
+      },
+      { id: 13, sentence: "经过一年的努力，他的成绩______了很多。", answer: "提高", distractors: ["进步", "增加", "改善", "上升", "变好"], pinyin: "tígāo", meaning: "meningkat", explanation: "'提高' adalah kata yang tepat untuk peningkatan prestasi akademik.",
+        optionExplanations: {
+          "提高": "✓ Benar - '成绩提高' adalah kolokasi tepat untuk nilai yang naik",
+          "进步": "✗ '进步' adalah kata benda, butuh '取得进步' bukan '进步了'",
+          "增加": "✗ '增加' untuk kuantitas, bukan kualitas nilai",
+          "改善": "✗ '改善' untuk perbaikan kondisi, bukan angka nilai",
+          "上升": "✗ '上升' terlalu teknis, lebih untuk data/statistik",
+          "变好": "✗ '变好' terlalu informal untuk konteks akademik"
+        }
+      },
+      { id: 14, sentence: "这个菜______得太咸了，需要加点水。", answer: "做", distractors: ["煮", "烧", "炒", "烤", "蒸"], pinyin: "zuò", meaning: "membuat/memasak", explanation: "'做菜' adalah frasa umum untuk memasak makanan.",
+        optionExplanations: {
+          "做": "✓ Benar - '做菜' adalah cara umum menyebut memasak makanan",
+          "煮": "✗ '煮' spesifik untuk merebus, terlalu sempit",
+          "烧": "✗ '烧' untuk memasak dengan api, tidak universal",
+          "炒": "✗ '炒' untuk menumis, metode spesifik",
+          "烤": "✗ '烤' untuk memanggang, tidak cocok dengan 'tambah air'",
+          "蒸": "✗ '蒸' untuk mengukus, metode terlalu spesifik"
+        }
+      },
+      { id: 15, sentence: "______你不同意，我也要试试这个方法。", answer: "即使", distractors: ["虽然", "尽管", "如果", "要是", "就算"], pinyin: "jíshǐ", meaning: "meskipun", explanation: "'即使' menunjukkan kondisi hipotesis yang tidak menghalangi tindakan.",
+        optionExplanations: {
+          "即使": "✓ Benar - '即使...也...' adalah struktur untuk kondisi hipotesis yang tidak menghalangi",
+          "   然": "✗ '虽然' untuk fakta yang sudah terjadi, bukan hipotesis",
+          "尽管": "✗ '尽管' sama dengan '虽然', untuk fakta bukan hipotesis",
+          "如果": "✗ '如果...就...' struktur kondisional, bukan konsesif",
+          "要是": "✗ '要是' sama dengan '如果', untuk kondisi bukan konsesi",
+          "就算": "✗ '就算' mirip tapi '即使' lebih formal dan tepat"
+        }
+      },
+      { id: 16, sentence: "他累得______眼睛   睁不开了。", answer: "连", distractors: ["就", "都", "也", "还", "甚至"], pinyin: "lián", meaning: "bahkan", explanation: "'连...都...' adalah struktur untuk menunjukkan tingkat ekstrem.",
+        optionExplanations: {
+          "连": "✓ Benar - '连...都...' struktur untuk menunjukkan tingkat paling ekstrem",
+          "就": "✗ '就' untuk menunjukkan hasil langsung, bukan tingkat ekstrem",
+          "都": "✗ '都' sendirian tidak bisa membentuk struktur penekanan",
+          "也": "✗ '也' untuk 'juga', tidak menunjukkan tingkat ekstrem",
+          "还": "✗ '还' untuk 'masih', tidak tepat untuk konteks ini",
+          "甚至": "✗ '甚至' mirip tapi tidak membentuk struktur '...都...' seperti '连'"
+        }
+      },
+      { id: 17, sentence: "请______安全，过马  要看车。", answer: "注意", distractors: ["小心", "当心", "留心", "关心", "注重"], pinyin: "zhùyì", meaning: "memperhatikan", explanation: "'注意安全' adalah frasa standar untuk mengingatkan keselamatan.",
+        optionExplanations: {
+          "注意": "✓ Benar - '注意安全' adalah frasa baku untuk peringatan keselamatan",
+          "小心": "✗ '小心' biasanya untuk '小心点' bukan '小心安全'",
+          "当心": "✗ '当心' untuk peringatan spesifik (当心车), bukan '当心安全'",
+          "留心": "✗ '留心' berarti 'memperhatikan baik-baik', terlalu formal",
+          "关心": "✗ '关心' berarti peduli/care about, bukan untuk peringatan",
+          "注重": "✗ '注重' untuk mementingkan sesuatu, bukan peringatan"
+        }
+      },
+      { id: 18, sentence: "这个消息让我感到十分______。", answer: "吃惊", distractors: ["惊讶", "意外", "震惊", "奇怪", "惊奇"], pinyin: "chījīng", meaning: "terkejut", explanation: "'吃惊' menggambarkan perasaan sangat terkejut terhadap berita.",
+        optionExplanations: {
+          "吃惊": "✓ Benar - '吃惊' menunjukkan keterkejutan yang kuat terhadap berita",
+          "惊讶": "✗ '惊讶' mirip tapi '吃惊' lebih natural dengan '十分'",
+          "意外": "✗ '意外' lebih untuk 'tidak terduga', bukan perasaan terkejut",
+          "震惊": "✗ '震惊' terlalu kuat, untuk berita yang sangat mengejutkan",
+          "奇怪": "✗ '奇怪' berarti aneh, bukan terkejut",
+          "惊奇": "   '惊奇' lebih untuk keheranan positif, bukan terkejut netral"
+        }
+      },
+      { id: 19, sentence: "公园里的花开得十分______。", answer: "漂亮", distractors: ["美丽", "好看", "美", "艳丽", "灿烂"], pinyin: "piàoliang", meaning: "cantik", explanation: "'漂亮' adalah kata yang paling umum untuk mendeskripsikan bunga yang mekar indah.",
+        optionExplanations: {
+          "漂亮": "✓ Benar - '漂亮' paling umum untuk mendeskripsikan bunga yang indah",
+          "美丽": "✗ '美丽' lebih formal, kurang natural untuk bunga",
+          "好看": "✗ '好看' terlalu kasual untuk konteks ini",
+          "美": "✗ '美' terlalu pendek, biasanya tidak digunakan sendirian dengan '十分'",
+          "艳丽": "✗ '艳丽' untuk warna yang mencolok, tidak umum untuk '开得'",
+          "灿烂": "✗ '   烂' untuk sinar/cahaya, bukan bunga"
+        }
+      },
+      { id: 20, sentence: "他的病已经______了，明天就能出院。", answer: "恢复", distractors: ["好了", "痊愈", "康复", "治好", "好转"], pinyin: "huīfù", meaning: "pulih", explanation: "'恢复' menunjukkan proses pemulihan kesehatan yang sudah selesai.",
+        optionExplanations: {
+          "恢复": "✓ Benar - '病恢复' menunjukkan pemulihan lengkap dari penyakit",
+          "好了": "✗ '好了' terlalu kasual untuk konteks medis formal",
+          "痊愈": "✗ '痊愈' sangat formal, biasanya untuk laporan medis tertulis",
+          "康复": "✗ '康复' lebih untuk proses rehabilitasi, bukan hasil akhir",
+          "治好": "✗ '治好' fokus pada pengobatan, bukan kondisi pasien",
+          "好转": "✗ '好转' berarti membaik, tapi belum sembuh total"
+        }
+      },
+      
+      { id: 21, sentence: "他在一家大公司______经理。", answer: "当", distractors: ["做", "担任", "任", "是", "成为"], pinyin: "dāng", meaning: "menjadi/bertugas sebagai", explanation: "'当经理' adalah frasa yang tepat untuk menjabat sebagai manajer.",
+        optionExplanations: {
+          "当": "✓ Benar - '当经理' adalah cara paling umum menyebut jabatan",
+          "做": "✗ '做' bisa digunakan tapi kurang formal dari '当'",
+          "担任": "✗ '担任' sangat formal, lebih untuk dokumen resmi",
+          "任": "✗ '任' terlalu formal dan kuno",
+          "是": "✗ '是' terlalu langsung, kurang alami",
+          "成为": "✗ '成为' untuk proses menjadi, bukan status saat ini"
+        }
+      },
+      { id: 22, sentence: "   次会   非常重要，请你务必______。", answer: "参加", distractors: ["出席", "到场", "来", "去", "加入"], pinyin: "cānjiā", meaning: "mengikuti", explanation: "'参加会议' adalah kolokasi standar untuk menghadiri rapat.",
+        optionExplanations: {
+          "参加": "✓ Benar - '参加会议' adalah kolokasi standar yang paling umum",
+          "出席": "✗ '出席' sangat formal, untuk acara resmi/ceremonial",
+          "到场": "✗ '到场' berarti hadir secara fisik, tapi tidak aktif berpartisipasi",
+          "来": "✗ '来' terlalu kasual untuk konteks formal",
+          "去": "✗ '去' sama kasualnya dengan '来'",
+          "加入": "✗ '加入' untuk bergabung sebagai anggota, bukan menghadiri sekali"
+        }
+      },
+      { id: 23, sentence: "我们应该______保护环境的志愿者。", answer: "成为", distractors: ["做", "当", "是", "变成", "加入"], pinyin: "chéngwéi", meaning: "menjadi", explanation: "'成为志愿者' menunjukkan transformasi menjadi relawan.",
+        optionExplanations: {
+          "成为": "✓ Benar - '成为' menunjukkan proses transformasi menjadi relawan",
+          "做": "✗ '做志愿者' bisa digunakan tapi lebih untuk aktivitas temporer",
+          "当": "✗ '当' lebih untuk posisi/jabatan formal",
+          "是": "✗ '是' terlalu statis, tidak menunjukkan proses",
+          "变成": "✗ '变成' untuk perubahan dramatis, tidak cocok",
+          "加入": "✗ '加入' butuh objek organisasi, bukan status diri"
+        }
+      },
+      { id: 24, sentence: "法律______每个人都必须遵守交通规则。", answer: "规定", distractors: ["要求", "命令", "说", "指出", "强调"], pinyin: "guīdìng", meaning: "menetapkan", explanation: "'法律规定' adalah frasa formal untuk peraturan hukum.",
+        optionExplanations: {
+          "规定": "✓ Benar - '法律规定' adalah kolokasi baku untuk penetapan hukum",
+          "要求": "✗ '要求' untuk permintaan, bukan penetapan hukum",
+          "命令": "✗ '命令' terlalu keras, untuk perintah militer",
+          "说": "✗ '说' terlalu informal untuk konteks hukum",
+          "指出": "✗ '指   ' untuk menunjukkan/menjelaskan, bukan menetapkan",
+          "强调": "✗ '强调' untuk menekankan, bukan membuat aturan"
+        }
+      },
+      { id: 25, sentence: "他提出的______非常新颖，大家都很赞同。", answer: "建议", distractors: ["意见", "想法", "观点", "主意", "方案"], pinyin: "jiànyì", meaning: "saran", explanation: "'提出建议' adalah kolokasi yang tepat untuk mengajukan usulan.",
+        optionExplanations: {
+          "建议": "✓ Benar - '提出建议' adalah kolokasi standar untuk mengajukan saran",
+          "意见": "✗ '提出意见' lebih untuk pendapat, bisa negatif/positif",
+          "想法": "✗ '想法' terlalu kasual untuk konteks formal",
+          "观点": "✗ '观点' untuk sudut pandang/perspektif, bukan saran",
+          "主意": "✗ '主意' terlalu informal, untuk ide sehari-hari",
+          "方案": "✗ '方案' untuk rencana detail/proposal, terlalu spesifik"
+        }
+      },
+      { id: 26, sentence: "经过多次______，双方终于   了合同。", answer: "谈判", distractors: ["讨论", "商量", "协商", "沟通", "交流"], pinyin: "tánpàn", meaning: "negosiasi", explanation: "'谈判' adalah istilah formal untuk negosiasi bisnis.",
+        optionExplanations: {
+          "谈判": "✓ Benar - '谈判' adalah istilah formal untuk negosiasi kontrak bisnis",
+          "讨论": "✗ '讨论' untuk diskusi umum, tidak spesifik untuk bisnis",
+          "商量": "✗ '商量' terlalu informal untuk konteks bisnis",
+          "协商": "✗ '协商' mirip tapi '谈判' lebih umum untuk kontrak",
+          "沟通": "✗ '沟通' untuk komunikasi umum, tidak spesifik negosiasi",
+          "交流": "✗ '交流' untuk pertukaran informasi, bukan negosiasi"
+        }
+      },
+      { id: 27, sentence: "他对工作非常______，从不迟到早退。", answer: "负责", distractors: ["认真", "努力", "积极", "热情", "专心"], pinyin: "fùzé", meaning: "bertanggung jawab", explanation: "'负责' menggambarkan sikap bertanggung jawab terhadap pekerjaan.",
+        optionExplanations: {
+          "负责": "✓ Benar - '对工作负责' menunjukkan tanggung jawab terhadap pekerjaan",
+          "认真": "✗ '认真' untuk serius/teliti, bukan tanggung jawab keseluruhan",
+          "努力": "✗ '努力' untuk kerja keras, tidak menekankan disiplin waktu",
+          "积极": "✗ '积极' untuk proaktif, tidak spesifik tentang ketepatan waktu",
+          "热情": "✗ '热情' untuk antusias, tidak tentang disiplin",
+          "专心": "✗ '专心' untuk fokus/konsentrasi, bukan tanggung jawab"
+        }
+      },
+      { id: 28, sentence: "她是我的大学同学，也是我的好______。", answer: "友谊", distractors: ["朋友", "伙伴", "知己", "闺  ", "兄弟"], pinyin: "yǒuyì", meaning: "persahabatan", explanation: "'友谊' merujuk pada hubungan persahabatan yang erat.",
+        optionExplanations: {
+          "友谊": "✓ Benar - '好友谊' menunjukkan hubungan persahabatan yang erat",
+          "朋友": "✗ '好朋友' benar tapi konteks butuh kata benda abstrak",
+          "伙伴": "✗ '伙伴' untuk partner/rekan, kurang emosional",
+          "   己": "✗ '知己' untuk sahabat yang sangat memahami, terlalu kuat",
+          "闺蜜": "✗ '闺蜜' hanya untuk perempuan, terlalu spesifik",
+          "兄弟": "✗ '兄弟' hanya untuk laki-laki, terlalu spesifik"
+        }
+      },
+      { id: 29, sentence: "政府出台了新______来促进经济发展。", answer: "政策", distractors: ["法律", "规定", "制度", "措施", "方案"], pinyin: "zhèngcè", meaning: "kebijakan", explanation: "'政策' adalah istilah untuk kebijakan pemerintah.",
+        optionExplanations: {
+          "政策": "✓ Benar - '政府政策' adalah kolokasi standar untuk kebijakan pemerintah",
+          "法律": "✗ '法律' lebih permanen dan kaku dari kebijakan",
+          "规定": "✗ '规定' untuk aturan spesifik, bukan kebijakan makro",
+          "制度": "✗ '制度' untuk sistem, lebih luas dari kebijakan",
+          "措施": "✗ '措施' untuk tindakan konkret, bukan kebijakan umum",
+          "方案": "✗ '方案' untuk rencana detail, terlalu spesifik"
+        }
+      },
+      { id: 30, sentence: "他的______是成为一名优秀的医生。", answer: "理想", distractors: ["目标", "梦想", "愿望", "希望", "志向"], pinyin: "lǐxiǎng", meaning: "cita-cita", explanation: "'理想' menunjukkan cita-cita atau aspirasi jangka panjang.",
+        optionExplanations: {
+          "理想": "✓ Benar - '理想' menunjukkan cita-cita mulia jangka panjang",
+          "目标": "✗ '目标' lebih konkret dan terukur, bukan aspirasi",
+          "梦想": "✗ '梦想' lebih fantastis, kurang realistis dari '理想'",
+          "愿望": "✗ '愿望' untuk keinginan umum, tidak spesifik karir",
+          "希望": "✗ '希望' terlalu lemah untuk cita-cita besar",
+          "志向": "✗ '志向' mirip tapi '理想' lebih umum digunakan"
+        }
+      },
+      
+      { id: 31, sentence: "我完  ______你的观点，你  得很有道理。", answer: "同意", distractors: ["赞成", "支持", "认同", "接受", "理解"], pinyin: "tóngyì", meaning: "setuju", explanation: "'同意观点' adalah frasa standar untuk menyetujui pendapat.",
+        optionExplanations: {
+          "同意": "✓ Benar - '同意观点' adalah kolokasi paling umum untuk setuju",
+          "赞成": "✗ '赞成' lebih formal, untuk keputusan/voting",
+          "支持": "✗ '支持' untuk dukungan aktif, bukan hanya setuju",
+          "认同": "✗ '认同' untuk setuju secara emosional/nilai, terlalu dalam",
+          "接受": "✗ '接受' untuk menerima setelah ragu, tidak tepat",
+          "理解": "✗ '理解' berarti paham, bukan setuju"
+        }
+      },
+      { id: 32, sentence: "他______承认，这次错误是他造成的。", answer: "主动", distractors: ["自己", "亲自", "立即", "马上", "勇敢"], pinyin: "zhǔdòng", meaning: "aktif/inisiatif", explanation: "'主动承认' menunjukkan pengakuan yang dilakukan atas inisiatif sendiri.",
+        optionExplanations: {
+          "主动": "✓ Benar - '主动承认' berarti mengakui atas inisiatif sendiri",
+          "自己": "✗ '自己承认' berarti mengakui sendiri, tapi tidak menekankan inisiatif",
+          "亲自": "✗ '亲自' untuk melakukan sendiri secara langsung, tidak tepat",
+          "立即": "✗ '立即' tentang waktu cepat, bukan inisiatif",
+          "马上": "✗ '马上' sama dengan '立即', tentang kecepatan",
+          "勇敢": "✗ '勇敢承认' menekankan keberanian, bukan inisiatif"
+        }
+      },
+      { id: 33, sentence: "请你______考虑，然后再做决定。", answer: "仔细", distractors: ["认真", "  重", "小心", "好好", "   细"], pinyin: "zǐxì", meaning: "cermat", explanation: "'仔细考虑' berarti mempertimbangkan dengan seksama.",
+        optionExplanations: {
+          "仔细": "✓ Benar - '仔细考虑' adalah kolokasi standar untuk pertimbangan teliti",
+          "认真": "✗ '认真' lebih untuk sikap serius, bukan detail",
+          "慎重": "✗ '慎重' untuk hati-hati dalam keputusan penting, terlalu formal",
+          "小心": "✗ '小心' untuk berhati-hati terhadap bahaya, tidak tepat",
+          "好好": "✗ '好好' terlalu kasual, kurang formal",
+          "详细": "✗ '详细' untuk detail lengkap, bukan cara berpikir"
+        }
+      },
+      { id: 34, sentence: "能够帮助别人，我感到很______。", answer: "幸福", distractors: ["高兴", "开心", "快乐", "满足", "欣慰"], pinyin: "xìngfú", meaning: "bahagia", explanation: "'幸福' menggambarkan kebahagiaan yang mendalam dari membantu orang lain.",
+        optionExplanations: {
+          "幸福": "✓ Benar - '幸福' menunjukkan kebahagiaan mendalam dari hal bermakna",
+          "高兴": "✗ '高兴' terlalu superfisial untuk konteks ini",
+          "开心": "✗ '开心' sama dengan '高兴', kurang mendalam",
+          "快乐": "✗ '快乐' untuk kesenangan umum, tidak spesifik",
+          "满足": "✗ '满足' untuk kepuasan, bukan kebahagiaan",
+          "欣慰": "✗ '欣慰' untuk lega/puas, tidak cukup kuat"
+        }
+      },
+      { id: 35, sentence: "他对别人的批评总是不太______。", answer: "接受", distractors: ["欢迎", "听", "认同", "理解", "在意"], pinyin: "jiēshòu", meaning: "menerima", explanation: "'接受批评' berarti menerima kritik dari orang lain.",
+        optionExplanations: {
+          "接受": "✓ Benar - '接受批评' adalah kolokasi standar untuk menerima kritik",
+          "欢迎": "✗ '欢迎批评' terlalu positif, tidak natural",
+          "听": "✗ '听批评' berarti mendengar, bukan menerima",
+          "认同": "✗ '认同' berarti setuju, lebih kuat dari menerima",
+          "理解": "✗ '理解' berarti paham, bukan menerima",
+          "在意": "✗ '在意' berarti peduli, tidak tepat dengan '不太'"
+        }
+      },
+      { id: 36, sentence: "我______你一定能通过这次考试。", answer: "相信", distractors: ["认为", "觉得", "希望", "确定", "肯定"], pinyin: "xiāngxìn", meaning: "percaya", explanation: "'相信' menunjukkan keyakinan terhadap kemampuan seseorang.",
+        optionExplanations: {
+          "相信": "✓ Benar - '相信' menunjukkan kepercayaan penuh terhadap seseorang",
+          "认为": "✗ '认为' untuk pendapat, bukan keyakinan",
+          "觉得": "✗ '觉得' untuk perasaan subjektif, kurang kuat",
+          "希望": "✗ '希望' untuk harapan, tidak menyatakan keyakinan",
+          "确定": "✗ '确定' terlalu absolut, tidak natural",
+          "肯定": "   '肯定' sama dengan '确定', terlalu tegas"
+        }
+      },
+      { id: 37, sentence: "他______忘记了我的生日，让我有点失望。", answer: "竟然", distractors: ["居然", "真的", "确实", "完全", "果然"], pinyin: "jìngrán", meaning: "ternyata/bahkan", explanation: "'竟然' menunjukkan kejutan atau ketidakpercayaan terhadap sesuatu yang terjadi.",
+        optionExplanations: {
+          "竟然": "✓ Benar - '竟然' menunjukkan kejutan tidak percaya atas hal yang terjadi",
+          "居然": "✗ '居然' mirip dengan '  然' tapi kurang umum digunakan",
+          "真的": "✗ '真的' untuk konfirmasi fakta, bukan menunjukkan kejutan",
+          "确实": "✗ '确实' untuk membenarkan, bukan mengekspresikan kejutan",
+          "完全": "✗ '完全' untuk tingkat lengkap, tidak menunjukkan kejutan",
+          "果然": "✗ '果然' untuk sesuatu yang sesuai prediksi, berlawanan makna"
+        }
+      },
+      { id: 38, sentence: "孩子们对世界充满了______。", answer: "  奇", distractors: ["   趣", "热情", "疑问", "想象", "幻想"], pinyin: "hàoqí", meaning: "rasa ingin tahu", explanation: "'好奇' menggambarkan rasa ingin tahu yang besar dari anak-anak.",
+        optionExplanations: {
+          "好奇": "✓ Benar - '充满好奇' adalah kolokasi umum untuk rasa ingin tahu anak",
+          "兴趣": "✗ '兴趣' untuk minat spesifik, tidak umum dengan '充满'",
+          "热情": "✗ '热情' untuk antusiasme, terlalu dewasa untuk anak",
+          "疑问": "✗ '疑问' untuk pertanyaan spesifik, tidak tepat",
+          "想象": "✗ '想象' untuk imajinasi, berbeda dari rasa ingin tahu",
+          "幻想": "✗ '幻想' untuk fantasi, tidak sesuai konteks"
+        }
+      },
+      { id: 39, sentence: "在公共场合______吸烟是不礼貌的。", answer: "直接", distractors: ["随便", "任意", "当众", "大声", "自由"], pinyin: "zhíjiē", meaning: "langsung", explanation: "'直接吸烟' menunjukkan tindakan merokok secara langsung tanpa mempertimbangkan orang lain.",
+        optionExplanations: {
+          "直接": "✓ Benar - '直接吸烟' berarti merokok tanpa mempertimbangkan orang lain",
+          "随便": "✗ '随便' terlalu kasual, tidak menunjukkan masalah",
+          "任意": "✗ '任意' terlalu formal, tidak natural",
+          "当众": "✗ '当众' lebih untuk tindakan di depan banyak orang, terlalu spesifik",
+          "大声": "✗ '大声' untuk suara keras, tidak cocok dengan merokok",
+          "自由": "✗ '自由' tentang kebebasan, tidak menekankan masalah"
+        }
+      },
+      { id: 40, sentence: "父母应该______孩子的兴趣爱好。", answer: "尊重", distractors: ["支持", "理解", "鼓励", "培养", "关心"], pinyin: "zūnzhòng", meaning: "menghormati", explanation: "'尊重' berarti menghormati minat dan hobi anak.",
+        optionExplanations: {
+          "尊重": "✓ Benar - '   重兴趣' menunjukkan sikap menghormati pilihan anak",
+          "支持": "✗ '支持' untuk dukungan aktif, tidak menekankan respect",
+          "理解": "✗ '理解' untuk pemahaman, kurang kuat dari menghormati",
+          "鼓励": "✗ '鼓励' untuk mendorong, bisa berarti mempengaruhi",
+          "培养": "✗ '培养' untuk mengembangkan, terlalu aktif",
+          "关心": "✗ '关心' untuk peduli, terlalu umum"
+        }
+      },
+      
+      { id: 41, sentence: "这台手机的______是三千元人民币。", answer: "价格", distractors: ["价钱", "费用", "成本", "定价", "售价"], pinyin: "jiàgé", meaning: "harga", explanation: "'价格' adalah kata standar untuk menyebut harga barang.",
+        optionExplanations: {
+          "价格": "✓ Benar - '价格' adalah istilah standar untuk harga barang",
+          "价钱": "✗ '价钱' lebih kasual dari '价格', kurang formal",
+          "费用": "✗ '费用' untuk biaya layanan/operasional, bukan harga barang",
+          "成本": "✗ '成本' untuk biaya produksi, bukan harga jual",
+          "定价": "✗ '定价' untuk proses penetapan harga, bukan harga itu sendiri",
+          "售价": "✗ '售价' mirip tapi '价格' lebih umum digunakan"
+        }
+      },
+      { id: 42, sentence: "这家   店的商品______非常合理。", answer: "价格", distractors: ["价钱", "定价", "收费", "费用", "成本"], pinyin: "jiàgé", meaning: "harga", explanation: "'商品价格' adalah kolokasi untuk harga barang dagangan.",
+        optionExplanations: {
+          "价格": "✓ Benar - '商品价格' adalah kolokasi standar yang paling formal",
+          "价钱": "✗ '价钱' bisa digunakan tapi kurang formal",
+          "定价": "✗ '定价' untuk kebijakan harga, bukan harga aktual",
+          "收费": "✗ '收费' untuk biaya layanan, bukan harga barang",
+          "费用": "✗ '费用' untuk pengeluaran, tidak tepat untuk barang",
+          "成本": "✗ '成本' untuk biaya produksi, perspektif penjual"
+        }
+      },
+      { id: 43, sentence: "我昨天去银行______了一些美元。", answer: "换", distractors: ["兑", "买", "取", "  ", "提"], pinyin: "huàn", meaning: "menukar", explanation: "'换   元' berarti menukar uang ke mata uang dolar.",
+        optionExplanations: {
+          "换": "✓ Benar - '换美元' adalah cara paling umum menyebut penukaran mata uang",
+          "兑": "✗ '兑' lebih formal dan teknis untuk penukaran valuta",
+          "买": "✗ '买' untuk membeli, tidak tepat untuk menukar mata uang",
+          "取": "✗ '取' untuk mengambil uang yang sudah ada, bukan menukar",
+          "存": "✗ '存' untuk menyimpan/menabung, bukan menukar",
+          "提": "✗ '提' untuk menarik uang, bukan menukar"
+        }
+      },
+      { id: 44, sentence: "公司在报纸上登了招聘______。", answer: "广告", distractors: ["通知", "信息", "启事", "消息", "公告"], pinyin: "guǎnggào", meaning: "iklan", explanation: "'招聘广告' adalah iklan untuk merekrut karyawan.",
+        optionExplanations: {
+          "广告": "✓ Benar - '招聘广告' adalah kolokasi standar untuk iklan rekrutmen",
+          "通知": "✗ '通知' untuk pemberitahuan internal, bukan iklan publik",
+          "信息": "✗ '信息' terlalu umum, tidak spesifik untuk iklan",
+          "启事": "✗ '启事' untuk pengumuman publik, kurang komersial",
+          "消息": "✗ '消息' untuk berita/news, bukan iklan",
+          "公告": "✗ '公告' untuk pengumuman resmi, tidak untuk rekrutmen komersial"
+        }
+      },
+      { id: 45, sentence: "这次合作对我们双方都有______。", answer: "好处", distractors: ["利益", "益处", "优点", "帮助", "作用"], pinyin: "hǎochù", meaning: "manfaat", explanation: "'有好处' menunjukkan keuntungan atau manfaat yang didapat.",
+        optionExplanations: {
+          "好处": "✓ Benar - '有好处' adalah frasa umum untuk menyatakan manfaat",
+          "利益": "✗ '利益' lebih formal dan sering untuk kepentingan ekonomi",
+          "益处": "✗ '益处' sangat formal, jarang digunakan dalam percakapan",
+          "优点": "✗ '优点' untuk kelebihan karakteristik, bukan manfaat aktual",
+          "帮助": "✗ '帮助' untuk bantuan, tidak tepat dengan '有'",
+          "作用": "✗ '作用' untuk fungsi/efek, bukan manfaat langsung"
+        }
+      },
+      { id: 46, sentence: "经过详细______，这个项目被批准了。", answer: "调查", distractors: ["研究", "分析", "考察", "审查", "检查"], pinyin: "diàochá", meaning: "investigasi", explanation: "'调查' menunjukkan proses penyelidikan yang mendetail sebelum persetujuan.",
+        optionExplanations: {
+          "调查": "✓ Benar - '调查' untuk investigasi menyeluruh sebelum keputusan",
+          "研究": "✗ '研究' untuk studi akademis, terlalu teoritis",
+          "分析": "✗ '分析' untuk analisis data, tidak menyeluruh seperti investigasi",
+          "考察": "✗ '考察' untuk inspeksi/observasi, kurang formal",
+          "审查": "✗ '审查' untuk review/audit, biasanya setelah ada proposal",
+          "检查": "✗ '检查' untuk pemeriksaan umum, terlalu kasual"
+        }
+      },
+      { id: 47, sentence: "他的______很清楚，我们一听就明白了。", answer: "解释", distractors: ["说明", "讲解", "表达", "说法", "回答"], pinyin: "jiěshì", meaning: "penjelasan", explanation: "'解释' merujuk pada penjelasan yang membuat sesuatu mudah dipahami.",
+        optionExplanations: {
+          "解释": "✓ Benar - '解释' untuk penjelasan yang membuat hal rumit menjadi jelas",
+          "说明": "✗ '说明' untuk instruksi/deskripsi, lebih teknis",
+          "讲解": "✗ '讲解' untuk pengajaran detail, terlalu formal",
+          "表达": "✗ '表达' untuk cara mengekspresikan, bukan isi penjelasan",
+          "说法": "✗ '说法' untuk cara mengatakan/versi cerita, tidak tepat",
+          "回答": "✗ '回答' untuk jawaban spesifik, bukan penjelasan umum"
+        }
+      },
+      { id: 48, sentence: "我们需要就这个问题进行一次正式______。", answer: "交流", distractors: ["讨论", "沟通", "商量", "谈话", "对话"], pinyin: "jiāoliú", meaning: "komunikasi", explanation: "'交流' menunjukkan komunikasi formal tentang suatu masalah.",
+        optionExplanations: {
+          "交流": "✓ Benar - '交流' menekankan pertukaran ide dua arah secara formal",
+          "讨论": "✗ '讨论' untuk diskusi, kurang menekankan formalitas",
+          "沟通": "✗ '沟通' untuk komunikasi umum, kurang formal",
+          "商量": "✗ '商量' untuk berunding informal, terlalu kasual",
+          "谈话": "✗ '谈话' untuk percakapan, tidak cukup formal",
+          "对话": "✗ '对话' untuk dialog, lebih kasual dari '交流'"
+        }
+      },
+      { id: 49, sentence: "经理让我把这些______打印十份。", answer: "材料", distractors: ["文  ", "资料", "报告", "文档", "表格"], pinyin: "cáiliào", meaning: "materi/dokumen", explanation: "'材料' merujuk pada dokumen atau materi yang perlu dicetak.",
+        optionExplanations: {
+          "材料": "✓ Benar - '材料' adalah istilah umum untuk berbagai jenis dokumen kerja",
+          "文件": "✗ '文件' lebih formal dan resmi, untuk dokumen penting",
+          "资料": "✗ '资料' untuk data/informasi referensi, terlalu spesifik",
+          "报告": "✗ '  告' untuk laporan, terlalu spesifik untuk konteks ini",
+          "文档": "✗ '文档' lebih teknis, untuk file komputer",
+          "表格": "✗ '表格' untuk formulir/tabel, terlalu spesifik"
+        }
+      },
+      { id: 50, sentence: "这个产品的市场______非常大。", answer: "前途", distractors: ["前景", "空间", "潜力", "机会", "需求"], pinyin: "qiántú", meaning: "prospek", explanation: "'市场前途' menunjukkan prospek pasar yang luas untuk produk tersebut.",
+        optionExplanations: {
+          "前途": "✓ Benar - '市场前途' menunjukkan prospek jangka panjang yang cerah",
+          "前景": "✗ '前景' mirip tapi '前途' lebih umum dalam konteks bisnis",
+          "空间": "✗ '空间' untuk ruang pertumbuhan, kurang lengkap",
+          "潜力": "✗ '潜力' untuk potensi tersembunyi, tidak menekankan pasar",
+          "机会": "✗ '机会' untuk peluang, tidak tepat dengan 'besar'",
+          "需求": "✗ '需求' untuk demand, berbeda dari prospek"
+        }
+      },
+      
+      { id: 51, sentence: "飞机马上就要______了，请系好安全带。", answer: "起飞", distractors: ["出发", "离开", "飞", "升空", "启动"], pinyin: "qǐfēi", meaning: "lepas landas", explanation: "'起飞' adalah istilah untuk pesawat yang akan lepas landas.",
+        optionExplanations: {
+          "起飞": "✓ Benar - '起飞' adalah istilah standar untuk pesawat lepas landas",
+          "出发": "✗ '出发' untuk berangkat umum, tidak spesifik untuk pesawat",
+          "离开": "✗ '离开' untuk meninggalkan tempat, terlalu umum",
+          "飞": "✗ '飞' terlalu sederhana, tidak formal untuk pengumuman",
+          "升空": "✗ '升空' terlalu teknis dan jarang digunakan",
+          "启动": "✗ '启  ' untuk menyalakan mesin, bukan lepas landas"
+        }
+      },
+      { id: 52, sentence: "我的家乡   长江______，风景很美。", answer: "沿岸", distractors: ["相反", "对面", "两边", "流域", "附近"], pinyin: "yán'àn", meaning: "sepanjang pantai/tepi", explanation: "'沿岸' menunjukkan lokasi di sepanjang tepi sungai.",
+        optionExplanations: {
+          "沿岸": "✓ Benar - '长江沿岸' berarti di sepanjang tepi sungai Yangtze",
+          "相反": "✗ '相反' berarti sebaliknya, tidak ada hubungan geografis",
+          "对面": "✗ '对面' untuk seberang, tidak cocok dengan nama sungai",
+          "两边": "✗ '两边' untuk dua sisi, terlalu ambigu",
+          "流域": "✗ '流域' untuk daerah aliran sungai, terlalu teknis dan luas",
+          "附近": "✗ '附近' untuk sekitar, tidak spesifik tentang tepi sungai"
+        }
+      },
+      { id: 53, sentence: "请问，______火车站怎么走？", answer: "往", distractors: ["到", "去", "向", "朝", "从"], pinyin: "wǎng", meaning: "menuju", explanation: "'往...怎么走' adalah pola untuk menanyakan arah ke suatu tempat.",
+        optionExplanations: {
+          "往": "✓ Benar - '往...怎么走' adalah pola standar untuk menanyakan arah",
+          "到": "✗ '到' lebih untuk hasil sampai, bukan arah",
+          "去": "✗ '去' untuk pergi, tidak natural dengan '怎么走'",
+          "向": "✗ '向' terlalu formal untuk pertanyaan jalan",
+          "朝": "✗ '朝' mirip '向', terlalu formal",
+          "从": "✗ '从' untuk asal/dari, berlawanan makna"
+        }
+      },
+      { id: 54, sentence: "他决定______父亲的建议，去国外留学。", answer: "接受", distractors: ["听", "采纳", "同意", "遵从", "听从"], pinyin: "jiēshòu", meaning: "menerima", explanation: "'接受建议' berarti menerima saran yang diberikan.",
+        optionExplanations: {
+          "接受": "✓ Benar - '接受建议' adalah kolokasi standar yang paling natural",
+          "听": "✗ '听建议' terlalu kasual dan tidak lengkap",
+          "采纳": "✗ '采纳' terlalu formal, untuk konteks profesional",
+          "同意": "✗ '同意' untuk setuju, tidak spesifik untuk menerima saran",
+          "遵  ": "✗ '遵从' untuk mengikuti aturan, terlalu kaku",
+          "听从": "✗ '听从' mirip '遵从', terlalu formal"
+        }
+      },
+      { id: 55, sentence: "圣诞节______，街上非常热闹。", answer: "期间", distractors: ["左右", "前后", "时候", "之际", "来临"], pinyin: "qījiān", meaning: "selama", explanation: "'期间' menunjukkan periode waktu tertentu.",
+        optionExplanations: {
+          "期间": "✓ Benar - '圣诞节期间' berarti selama periode Natal",
+          "左右": "✗ '左右' untuk waktu sekitar/kurang lebih, tidak tepat",
+          "前后": "✗ '前后' untuk sebelum dan sesudah, tidak natural",
+          "时候": "✗ '时候' terlalu umum dan kasual",
+          "之际": "✗ '之际' terlalu formal dan sastrawi",
+          "来临": "✗ '来临' untuk kedatangan/menjelang, bukan selama"
+        }
+      },
+      { id: 56, sentence: "请沿着这条路一直走，银行就在你  ______。", answer: "  边", distractors: ["对面", "前面", "旁边", "附近", "左边"], pinyin: "yòubiān", meaning: "sebelah kanan", explanation: "'右边' menunjukkan posisi di sebelah kanan.",
+        optionExplanations: {
+          "右边": "✓ Benar - '在右边' menunjukkan lokasi di sebelah kanan jalan",
+          "对面": "✗ '对面' untuk seberang, tidak cocok dengan 'jalan lurus'",
+          "  面": "✗ '前面' untuk depan, kurang spesifik tentang sisi jalan",
+          "旁边": "✗ '旁边' untuk samping umum, tidak spesifik kiri/kanan",
+          "附近": "✗ '附近' untuk sekitar, terlalu luas",
+          "左边": "✗ '左边' untuk kiri, berlawanan dengan instruksi tipikal"
+        }
+      },
+      { id: 57, sentence: "由于大雾，高速公路被______了。", answer: "关闭", distractors: ["封闭", "封锁", "堵塞", "停止", "禁止"], pinyin: "guānbì", meaning: "ditutup", explanation: "'关闭' berarti jalan tol ditutup karena kabut tebal.",
+        optionExplanations: {
+          "关闭": "✓ Benar - '关闭' adalah kata standar untuk menutup fasilitas sementara",
+          "封闭": "✗ '封闭' lebih untuk menutup area, kurang umum",
+          "封锁": "✗ '封锁' untuk blokade keamanan, terlalu serius",
+          "堵塞": "✗ '堵塞' untuk macet/tersumbat, bukan ditutup sengaja",
+          "停止": "✗ '停止' untuk berhenti aktivitas, tidak untuk jalan",
+          "禁止": "✗ '禁止' untuk larangan, tidak tepat dengan 'ditutup'"
+        }
+      },
+      { id: 58, sentence: "这次旅行我们______了五个城市。", answer: "经过", distractors: ["访问", "参观", "游览", "到过", "去了"], pinyin: "jīngguò", meaning: "melewati", explanation: "'经过' menunjukkan melewati atau mengunjungi beberapa tempat.",
+        optionExplanations: {
+          "经过": "✓ Benar - '经过' menunjukkan perjalanan melewati beberapa kota",
+          "访问": "✗ '访问' untuk kunjungan resmi, terlalu formal",
+          "参观": "✗ '参观' untuk mengunjungi tempat wisata spesifik, tidak kota",
+          "游览": "✗ '游览' mirip '参观', untuk objek wisata",
+          "到过": "✗ '到过' untuk pernah ke, tidak menekankan perjalanan",
+          "去了": "✗ '去了' terlalu kasual dan tidak menunjukkan transit"
+        }
+      },
+      { id: 59, sentence: "地图上，红色______通常代表医院。", answer: "标志", distractors: ["符号", "记号", "标记", "图标", "标识"], pinyin: "biāozhì", meaning: "simbol/tanda", explanation: "'标志' merujuk pada simbol atau tanda di peta.",
+        optionExplanations: {
+          "标志": "✓ Benar - '标志' adalah istilah standar untuk simbol di peta",
+          "符号": "✗ '符号' lebih untuk simbol matematika/teks, kurang visual",
+          "记号": "✗ '记号' untuk tanda sederhana, terlalu kasual",
+          "标记": "✗ '标记' untuk marking/penanda, kurang formal",
+          "图标": "✗ '图标' untuk ikon komputer/digital, terlalu modern",
+          "标识": "✗ '标识' untuk identifikasi, tidak natural untuk peta"
+        }
+      },
+      { id: 60, sentence: "公园______有一个很大的超市。", answer: "附近", distractors: ["旁边", "周围", "对面", "  面", "外面"], pinyin: "fùjìn", meaning: "dekat/sekitar", explanation: "'附近' menunjukkan lokasi yang berdekatan dengan taman.",
+        optionExplanations: {
+          "附近": "✓ Benar - '附近' menunjukkan area sekitar dalam radius tertentu",
+          "旁边": "✗ '旁边' untuk tepat di samping, terlalu spesifik",
+          "周围": "✗ '周围' mirip '附近' tapi kurang umum dalam konteks ini",
+          "对面": "✗ '对面' untuk berhadapan langsung, terlalu spesifik",
+          "里面": "✗ '里面' untuk di dalam, tidak mungkin untuk supermarket besar",
+          "外面": "✗ '外面' untuk di luar, tidak memberikan informasi lokasi"
+        }
+      },
+      
+      { id: 61, sentence: "多吃水果对身体______。", answer: "有好处", distractors: ["好处", "有益", "健康", "有利", "好"], pinyin: "yǒu hǎochù", meaning: "bermanfaat", explanation: "'有好处' menunjukkan manfaat kesehatan dari makan buah.",
+        optionExplanations: {
+          "有好处": "✓ Benar - '对...有好处' adalah pola lengkap yang benar",
+          "好处": "✗ '好处' adalah kata benda, butuh '有' di depan",
+          "有益": "✗ '有益' terlalu formal untuk percakapan",
+          "健康": "✗ '健康' adalah kata sifat/benda, tidak bisa langsung mengikuti '对'",
+          "有利": "✗ '有利' untuk keuntungan strategis, bukan kesehatan",
+          "好": "✗ '   ' terlalu sederhana dan tidak lengkap"
+        }
+      },
+      { id: 62, sentence: "他______得很快，估计下周就能跑步了。", answer: "恢复", distractors: ["好转", "康复", "痊愈", "好", "治愈"], pinyin: "huīfù", meaning: "pulih", explanation: "'恢复' menunjukkan proses pemulihan yang cepat.",
+        optionExplanations: {
+          "恢复": "✓ Benar - '恢复得快' adalah cara umum menyebut pemulihan cepat",
+          "好转": "✗ '好转' untuk mulai membaik, belum sembuh total",
+          "康复": "✗ '康复' lebih untuk rehabilitasi jangka panjang",
+          "痊愈": "✗ '痊愈' sangat formal, untuk sembuh total",
+          "好": "✗ '好' terlalu sederhana untuk konteks medis",
+          "治愈": "✗ '   愈' untuk menyembuhkan (perspektif dokter), bukan pulih"
+        }
+      },
+      { id: 63, sentence: "春天来了，______开  变暖和了。", answer: "天气", distractors: ["温度", "气温", "气候", "季节", "空气"], pinyin: "tiānqì", meaning: "cuaca", explanation: "'天气' merujuk pada kondisi cuaca secara umum.",
+        optionExplanations: {
+          "天气": "✓ Benar - '天气' adalah subjek paling natural untuk 'mulai hangat'",
+          "温度": "✗ '温度' untuk angka suhu spesifik, terlalu teknis",
+          "气温": "✗ '气温' sama dengan '温度', untuk data numerik",
+          "气候": "✗ '气候' untuk iklim jangka panjang, bukan perubahan musiman",
+          "季节": "✗ '季节' adalah subjek yang sudah disebutkan (musim semi)",
+          "空气": "✗ '空气' untuk kualitas udara, bukan temperatur"
+        }
+      },
+      { id: 64, sentence: "这个房间太______了，需要开窗通风。", answer: "闷", distractors: ["干燥", "热", "潮湿", "封闭", "暗"], pinyin: "mēn", meaning: "pengap", explanation: "'闷' menggambarkan kondisi ruangan yang pengap dan perlu ventilasi.",
+        optionExplanations: {
+          "闷": "✓ Benar - '闷' menggambarkan ruangan pengap yang butuh sirkulasi udara",
+          "干燥": "✗ '干燥' untuk kering, tidak memerlukan 'buka jendela'",
+          "热": "✗ '热' untuk panas, tapi tidak spesifik tentang ventilasi",
+          "潮湿": "✗ '潮湿' untuk lembab, justru perlu dikurangi kelembaban",
+          "封闭": "✗ '封闭' mendeskripsikan kondisi tertutup, bukan sensasi",
+          "暗": "✗ '暗' untuk gelap, tidak ada hubungan dengan ventilasi"
+        }
+      },
+      { id: 65, sentence: "他的性格很______，从不轻易生气。", answer: "温和", distractors: ["耐心", "平静", "冷静", "随和", "宽容"], pinyin: "wēnhé", meaning: "lembut", explanation: "'温和' menggambarkan karakter yang lembut dan tidak mudah marah.",
+        optionExplanations: {
+          "温和": "✓ Benar - '性格温和' adalah kolokasi standar untuk karakter lembut",
+          "耐心": "✗ '耐心' untuk sabar, lebih tentang menunggu bukan temperamen",
+          "平静": "✗ '平静' untuk tenang (kondisi sementara), bukan sifat permanen",
+          "冷静": "✗ '冷静' untuk tetap tenang saat krisis, tidak sama dengan lembut",
+          "随和": "✗ '随和' untuk easy-going, tapi tidak spesifik tentang marah",
+          "宽容": "✗ '宽容' untuk toleran/pemaaf, berbeda dari lembut"
+        }
+      },
+      { id: 66, sentence: "______自己的   体非常重要。", answer: "爱护", distractors: ["保护", "照顾", "关心", "保养", "珍惜"], pinyin: "àih  ", meaning: "menjaga/merawat", explanation: "'爱护身体' berarti merawat dan menjaga kesehatan tubuh dengan baik.",
+        optionExplanations: {
+          "爱护": "✓ Benar - '爱护身体' menekankan perawatan penuh kasih sayang",
+          "保护": "✗ '保护' untuk melindungi dari bahaya eksternal, tidak lengkap",
+          "照顾": "✗ '照顾' biasanya untuk orang lain, bukan diri sendiri",
+          "关心": "✗ '关心' untuk peduli, tidak spesifik tentang tindakan",
+          "保养": "✗ '保养' untuk maintenance, terlalu mekanis",
+          "珍惜": "✗ '珍惜' untuk menghargai, tidak tentang tindakan konkret"
+        }
+      },
+      { id: 67, sentence: "昨  的______真大，许多树都被吹倒了。", answer: "风", distractors: ["雨", "雪", "雷", "暴风", "台风"], pinyin: "fēng", meaning: "angin", explanation: "'风' merujuk pada angin kencang yang menumbangkan pohon.",
+        optionExplanations: {
+          "风": "✓ Benar - '风大' menunjukkan angin kencang yang merobohkan pohon",
+          "雨": "✗ '雨' (hujan) tidak bisa merobohkan pohon",
+          "雪": "✗ '雪' (salju) tidak menumbangkan pohon dengan sendirinya",
+          "雷": "✗ '雷' (petir) bisa merusak tapi konteks '大' tidak tepat",
+          "暴风": "✗ '暴风' adalah badai, terlalu spesifik dan formal",
+          "台风": "✗ '台风' adalah topan/taifun, terlalu ekstrem dan jarang"
+        }
+      },
+      { id: 68, sentence: "山上的空气特别______。", answer: "新鲜", distractors: ["清新", "干净", "好", "清洁", "纯净"], pinyin: "xīnxiān", meaning: "segar", explanation: "'   鲜' menggambarkan udara yang segar di pegunungan.",
+        optionExplanations: {
+          "   鲜": "✓ Benar - '空气新鲜' adalah kolokasi paling umum dan natural",
+          "清新": "✗ '清新' mirip tapi kurang umum dari '新鲜'",
+          "干净": "✗ '干净' untuk bersih secara fisik, kurang tepat untuk udara",
+          "好": "✗ '好' terlalu umum dan tidak spesifik",
+          "清洁": "✗ '清洁' lebih untuk kebersihan higienis, tidak untuk udara",
+          "纯净": "✗ '纯净' untuk kemurnian air, tidak natural untuk udara"
+        }
+      },
+      { id: 69, sentence: "他收到了大学录取通知书，______极了。", answer: "激动", distractors: ["高兴", "兴奋", "开心", "快乐", "幸福"], pinyin: "jīdòng", meaning: "bersemangat", explanation: "'激动' menggambarkan perasaan sangat bersemangat saat menerima penerimaan universitas.",
+        optionExplanations: {
+          "激动": "✓ Benar - '   动' menunjukkan emosi kuat dan tergerak untuk momen penting",
+          "高兴": "✗ '高兴' terlalu ringan untuk momen sangat penting ini",
+          "兴奋": "✗ '兴奋' untuk excited, tapi '激动' lebih dalam secara emosional",
+          "开心": "✗ '开心' terlalu kasual untuk momen monumental",
+          "快乐": "✗ '快乐' untuk kebahagiaan umum, tidak spesifik",
+          "幸福": "✗ '幸福' untuk kebahagiaan mendalam tapi tidak menunjukkan intensitas"
+        }
+      },
+      { id: 70, sentence: "这种药的效果很______，我的头疼好多了。", answer: "明显", distractors: ["好", "快", "大", "强", "显著"], pinyin: "míngxiǎn", meaning: "jelas/nyata", explanation: "'明显' menunjukkan efek obat yang terlihat jelas dalam meredakan sakit kepala.",
+        optionExplanations: {
+          "明显": "✓ Benar - '效果明显' menunjukkan hasil yang jelas terlihat",
+          "好": "✗ '好' terlalu umum, tidak spesifik tentang visibilitas",
+          "快": "✗ '快' untuk cepat, tidak cocok dengan '很'",
+          "大": "✗ '大' untuk besar/kuat, kurang natural dengan efek",
+          "强": "✗ '强' untuk kuat, lebih untuk dosis bukan hasil",
+          "显著": "✗ '显著' sangat formal, untuk laporan ilmiah"
+        }
+      },
+      
+      { id: 71, sentence: "他的______比我好，这次考了第一名。", answer: "成绩", distractors: ["分数", "水平", "能力", "学习", "表现"], pinyin: "chéngjī", meaning: "nilai/prestasi", explanation: "'成绩' merujuk pada nilai atau prestasi akademik.",
+        optionExplanations: {
+          "成绩": "✓ Benar - '   绩' adalah istilah standar untuk nilai/prestasi akademik",
+          "分数": "✗ '分数' untuk angka nilai spesifik, terlalu sempit",
+          "水平": "✗ '水平' untuk tingkat kemampuan umum, tidak spesifik ujian",
+          "   力": "✗ '能力' untuk kapasitas, tidak terukur seperti nilai",
+          "学习": "✗ '学习' adalah aktivitas belajar, bukan hasil",
+          "表现": "✗ '表现' untuk performa umum, tidak spesifik nilai ujian"
+        }
+      },
+      { id: 72, sentence: "这本小说被______成了多种语言。", answer: "翻译", distractors: ["译", "转", "改", "写", "变"], pinyin: "fānyì", meaning: "menerjemahkan", explanation: "'翻译' berarti menerjemahkan teks ke bahasa lain.",
+        optionExplanations: {
+          "翻译": "✓ Benar - '翻译成' adalah kolokasi standar untuk penerjemahan",
+          "译": "✗ '译' adalah bentuk pendek '翻译', terlalu formal/sastrawi",
+          "  ": "✗ '转' untuk mengubah/convert, tidak untuk bahasa",
+          "改": "✗ '改' untuk mengubah/merevisi, bukan menerjemahkan",
+          "写": "✗ '写' untuk menulis, berbeda dari menerjemahkan",
+          "变": "✗ '变' untuk berubah, terlalu umum"
+        }
+      },
+      { id: 73, sentence: "中国有______五千年的悠久历史。", answer: "差不多", distractors: ["大约", "将近", "接近", "约", "近"], pinyin: "chàbuduō", meaning: "kurang lebih", explanation: "'差不多' menunjukkan perkiraan waktu sekitar 5000 tahun.",
+        optionExplanations: {
+          "差不多": "✓ Benar - '差不多' adalah cara paling umum menyebut 'kurang lebih'",
+          "大约": "✗ '大约' lebih formal dari '差不多'",
+          "将近": "✗ '将近' untuk 'hampir mencapai', menekankan mendekati",
+          "接近": "✗ '接近' sama dengan '将近', kurang natural",
+          "约": "✗ '约' terlalu formal dan singkat untuk percakapan",
+          "近": "✗ '近' berarti dekat, tidak untuk estimasi waktu"
+        }
+      },
+      { id: 74, sentence: "这两种颜色______起来，我更喜欢蓝色。", answer: "比较", distractors: ["对比", "相比", "比", "看", "选"], pinyin: "bǐjiào", meaning: "membandingkan", explanation: "'比较起来' adalah frasa untuk membandingkan dua hal.",
+        optionExplanations: {
+          "比较": "✓ Benar - '比较起来' adalah struktur lengkap untuk perbandingan",
+          "对比": "✗ '对比' lebih untuk kontras formal, terlalu serius",
+          "相比": "✗ '相比' mirip tapi tidak natural dengan '起来'",
+          "   ": "✗ '比' terlalu pendek, butuh '比较' untuk lengkap",
+          "看": "✗ '看' untuk melihat, tidak untuk membandingkan",
+          "选": "✗ '选' untuk memilih, bukan membandingkan"
+        }
+      },
+      { id: 75, sentence: "他   汉语水平和我______。", answer: "差不多", distractors: ["一样", "相同", "相似", "接近", "类似"], pinyin: "chàbuduō", meaning: "hampir sama", explanation: "'差不多' menunjukkan tingkat kemampuan yang hampir sama.",
+        optionExplanations: {
+          "差不多": "✓ Benar - '差不多' menunjukkan hampir sama dengan fleksibilitas",
+          "一样": "✗ '一样' untuk identik/sama persis, terlalu absolut",
+          "相同": "✗ '相同' mirip '一样', terlalu formal dan absolut",
+          "相似": "✗ '相似' untuk mirip, tidak cocok dengan tingkat kemampuan",
+          "接近": "✗ '接近' untuk mendekati, menekankan masih ada jarak",
+          "类似": "✗ '类似' untuk sejenis, tidak untuk tingkat kemampuan"
+        }
+      },
+      { id: 76, sentence: "长城是中国的文化______之一。", answer: "象征", distractors: ["代表", "标志", "符号", "遗产", "瑰宝"], pinyin: "xiàngzhēng", meaning: "simbol", explanation: "'文化象征' menunjukkan sesuatu yang melambangkan budaya.",
+        optionExplanations: {
+          "象征": "✓ Benar - '文化象征' adalah kolokasi standar untuk simbol budaya",
+          "代表": "✗ '代表' untuk representasi, kurang kuat dari simbol",
+          "标志": "✗ '标志' untuk tanda/marker, terlalu fisik",
+          "符号": "✗ '符号' untuk simbol abstrak, tidak untuk monumen",
+          "遗产": "✗ '遗产' untuk warisan, konteks berbeda",
+          "瑰宝": "✗ '瑰宝' untuk harta karun, terlalu puitis"
+        }
+      },
+      { id: 77, sentence: "他学习汉语的______非常强烈。", answer: "愿望", distractors: ["  望", "希望", "兴趣", "热情", "动力"], pinyin: "yuànwàng", meaning: "keinginan", explanation: "'愿望' menunjukkan keinginan yang kuat untuk mempelajari bahasa Mandarin.",
+        optionExplanations: {
+          "愿望": "✓ Benar - '愿望' untuk keinginan yang kuat dan tulus",
+          "欲望": "✗ '欲望' untuk hasrat/nafsu, konotasi negatif",
+          "希望": "✗ '希望' untuk harapan, tidak bisa 'kuat'",
+          "兴趣": "✗ '兴趣' untuk minat, tidak cocok dengan '强烈'",
+          "热情": "✗ '热情' untuk antusiasme, berbeda dari keinginan",
+          "动力": "✗ '动力' untuk motivasi, tidak natural dengan '强烈'"
+        }
+      },
+      { id: 78, sentence: "这个故事是根据真实事件______的。", answer: "改编", distractors: ["实际", "写成", "创作", "编写", "记录"], pinyin: "gǎibiān", meaning: "diadaptasi", explanation: "'改编' menunjukkan cerita yang diadaptasi dari kejadian nyata.",
+        optionExplanations: {
+          "改编": "✓ Benar - '改编' untuk mengadaptasi cerita dari sumber lain",
+          "实际": "✗ '实际' adalah kata sifat, tidak bisa jadi kata kerja di sini",
+          "写成": "✗ '写成' untuk ditulis menjadi, tidak menekankan adaptasi",
+          "创作": "✗ '创作' untuk kreasi original, berlawanan dengan adaptasi",
+          "编写": "✗ '编写' untuk menyusun/menulis, tidak spesifik adaptasi",
+          "记录": "✗ '记录' untuk mencatat, berbeda dari adaptasi kreatif"
+        }
+      },
+      { id: 79, sentence: "他的成绩在班里______中等水平。", answer: "属于", distractors: ["算", "是", "达到", "处于", "位于"], pinyin: "shǔyú", meaning: "termasuk", explanation: "'属于' menunjukkan klasifikasi atau kategori tertentu.",
+        optionExplanations: {
+          "属于": "✓ Benar - '属于' untuk menunjukkan termasuk dalam kategori",
+          "算": "✗ '算' untuk menghitung/menganggap, kurang formal",
+          "是": "✗ '是' terlalu langsung, kurang natural",
+          "达到": "✗ '达到' untuk mencapai, menekankan upaya",
+          "处于": "✗ '处于' untuk berada dalam kondisi, terlalu formal",
+          "位于": "✗ '位于' untuk lokasi geografis, tidak untuk tingkat"
+        }
+      },
+      { id: 80, sentence: "京剧是中国重要的传统______形式。", answer: "艺术", distractors: ["文化", "戏剧", "表演", "娱乐", "节目"], pinyin: "yìshù", meaning: "seni", explanation: "'艺术形式' menunjukkan opera Beijing sebagai bentuk seni tradisional.",
+        optionExplanations: {
+          "艺术": "✓ Benar - '艺术形式' adalah istilah standar untuk jenis kesenian",
+          "文化": "✗ '文化形式' tidak natural, terlalu luas",
+          "戏剧": "✗ '戏  ' sudah termasuk dalam kategori, redundan",
+          "表演": "✗ '表演形式' lebih untuk cara perform, bukan jenis seni",
+          "娱乐": "✗ '娱乐' meremehkan nilai budaya opera",
+          "节目": "✗ '节目' untuk program/acara, terlalu kasual"
+        }
+      },
+      
+      { id: 81, sentence: "他不小心______了杯子，水洒了一地。", answer: "打翻", distractors: ["掉", "摔", "打", "碰", "弄"], pinyin: "dǎfān", meaning: "menumpahkan", explanation: "'打翻' menunjukkan gelas terjatuh dan tumpah.",
+        optionExplanations: {
+          "打翻": "✓ Benar - '打翻' spesifik untuk menumpahkan wadah berisi cairan",
+          "  ": "✗ '掉' untuk jatuh umum, tidak menekankan tumpah",
+          "摔": "✗ '摔' untuk jatuh keras/pecah, tidak fokus pada tumpah",
+          "打": "✗ '打' tidak lengkap, butuh '打翻'",
+          "碰": "✗ '碰' untuk menyentuh/menubruk, tidak cukup kuat",
+          "弄": "✗ '弄' terlalu umum dan tidak spesifik"
+        }
+      },
+      { id: 82, sentence: "会议将在下午三点准时______。", answer: "举行", distractors: ["开始", "召开", "进行", "举办", "开展"], pinyin: "jǔxíng", meaning: "diselenggarakan", explanation: "'举行' adalah kata formal untuk menyelenggarakan acara atau rapat.",
+        optionExplanations: {
+          "举行": "✓ Benar - '举行会议' adalah kolokasi formal untuk mengadakan rapat",
+          "开始": "✗ '开始' untuk mulai, terlalu kasual",
+          "召开": "✗ '召开' sangat formal, untuk rapat pemerintah/penting",
+          "进行": "✗ '进行' untuk berlangsung, bukan mengadakan",
+          "举办": "✗ '举办' untuk event/acara, tidak untuk rapat rutin",
+          "开展": "✗ '开展' untuk memulai program/kampanye, bukan rapat"
+        }
+      },
+      { id: 83, sentence: "警察终于______了那个小偷。", answer: "抓住", distractors: ["捉", "抓", "逮", "捕", "逮捕"], pinyin: "zhuāzhù", meaning: "menangkap", explanation: "'抓住' berarti menangkap dan memegang pelaku.",
+        optionExplanations: {
+          "抓住": "✓ Benar - '抓住小偷' adalah cara paling umum menyebut penangkapan",
+          "捉": "✗ '捉' kurang natural untuk polisi menangkap",
+          "抓": "✗ '抓' tidak lengkap, butuh '抓住'",
+          "逮": "✗ '逮' terlalu informal dan kuno",
+          "捕": "✗ '捕' tidak lengkap, butuh '捕获' atau '逮捕'",
+          "逮捕": "✗ '逮捕' sangat formal, untuk laporan resmi"
+        }
+      },
+      { id: 84, sentence: "请你把这张表格______好。", answer: "填", distractors: ["写", "填写", "完成", "做", "填完"], pinyin: "tián", meaning: "mengisi", explanation: "'填表格' berarti mengisi formulir dengan lengkap.",
+        optionExplanations: {
+          "填": "✓ Benar - '填表格' adalah kolokasi standar yang paling ringkas",
+          "写": "✗ '写' terlalu umum, tidak spesifik untuk formulir",
+          "填写": "   '填写' benar tapi redundan dengan '好'",
+          "完成": "✗ '完成' untuk menyelesaikan, tidak spesifik mengisi",
+          "做": "✗ '做' terlalu kasual untuk konteks formal",
+          "填完": "✗ '填完' redundan dengan '好'"
+        }
+      },
+      { id: 85, sentence: "火车已经______车站，请乘客们下车。", answer: "到达", distractors: ["到", "进", "抵达", "来到", "进  "], pinyin: "dàodá", meaning: "tiba", explanation: "'到达' menunjukkan kereta telah sampai di stasiun.",
+        optionExplanations: {
+          "到达": "✓ Benar - '到达车站' adalah pengumuman formal standar",
+          "到": "✗ '到' terlalu kasual untuk pengumuman resmi",
+          "进": "✗ '进' untuk masuk, tidak tepat untuk kereta",
+          "抵达": "✗ '抵达' sangat formal, lebih untuk pesawat",
+          "来到": "✗ '来到' terlalu kasual dan naratif",
+          "进入": "✗ '进入' untuk masuk area, tidak untuk tiba"
+        }
+      },
+      { id: 86, sentence: "他热情地把我______进屋里。", answer: "迎", distractors: ["接待", "请", "引", "带", "领"], pinyin: "yíng", meaning: "menyambut", explanation: "'迎进' menunjukkan menyambut tamu masuk ke dalam rumah.",
+        optionExplanations: {
+          "迎": "✓ Benar - '迎进' menunjukkan menyambut dengan mengajak masuk",
+          "接待": "✗ '接待' untuk menerima formal, tidak natural dengan '进'",
+          "请": "✗ '请进' bisa digunakan tapi kurang menunjukkan gerakan aktif",
+          "引": "✗ '引' untuk memandu, terlalu formal",
+          "带": "✗ '带' untuk membawa, tidak menunjukkan penyambutan",
+          "领": "✗ '领' mirip '引', untuk memimpin masuk"
+        }
+      },
+      { id: 87, sentence: "这个秘密我一直为他______着。", answer: "保守", distractors: ["保持", "守", "藏", "隐瞒", "保密"], pinyin: "bǎoshǒu", meaning: "menjaga", explanation: "'保守秘密' berarti menjaga rahasia untuk seseorang.",
+        optionExplanations: {
+          "保守": "✓ Benar - '保守秘密' adalah kolokasi baku untuk menjaga rahasia",
+          "保持": "✗ '保持' untuk mempertahankan, tidak natural dengan rahasia",
+          "守": "✗ '守' tidak lengkap, butuh '保守'",
+          "藏": "✗ '藏' untuk menyembunyikan, berbeda dari menjaga",
+          "隐瞒": "✗ '隐瞒' untuk menyembunyikan dengan sengaja, konotasi negatif",
+          "保密": "✗ '保密' lebih formal, untuk dokumen rahasia"
+        }
+      },
+      { id: 88, sentence: "学校______了一场足球比赛。", answer: "组织", distractors: ["举办", "举行", "开展", "安排", "进行"], pinyin: "zǔzhī", meaning: "mengorganisir", explanation: "'组织' menunjukkan sekolah mengatur penyelenggaraan pertandingan.",
+        optionExplanations: {
+          "组织": "✓ Benar - '组织比赛' menekankan proses pengaturan lengkap",
+          "举办": "✗ '举办' bisa digunakan tapi '组织' lebih menekankan kerja persiapan",
+          "举行": "✗ '举行' untuk mengadakan, kurang menekankan persiapan",
+          "开展": "✗ '开展' untuk memulai aktivitas berkelanjutan, bukan event",
+          "安排": "✗ '安排' untuk menjadwalkan, tidak lengkap",
+          "进行": "✗ '进行' untuk melakukan, tidak untuk mengadakan"
+        }
+      },
+      { id: 89, sentence: "他的笑话  大家都______笑了。", answer: "逗", distractors: ["弄", "惹", "让", "  ", "令"], pinyin: "dòu", meaning: "membuat tertawa", explanation: "'逗笑' berarti membuat orang tertawa dengan lelucon.",
+        optionExplanations: {
+          "逗": "✓ Benar - '逗  ' adalah kolokasi khusus untuk membuat tertawa",
+          "弄": "✗ '弄' terlalu umum, tidak spesifik untuk humor",
+          "惹": "✗ '惹' untuk memancing emosi, biasanya negatif",
+          "让": "✗ '让' gramatikal benar tapi tidak senatural '逗'",
+          "使": "✗ '使' terlalu formal untuk konteks humor",
+          "令": "✗ '令' sangat formal, untuk dokumen/aturan"
+        }
+      },
+      { id: 90, sentence: "请在文件右下角______上你的名字。", answer: "签", distractors: ["写", "签字", "签名", "填", "登记"], pinyin: "qiān", meaning: "menandatangani", explanation: "'签名字' berarti menandatangani dokumen dengan nama.",
+        optionExplanations: {
+          "签": "✓ Benar - '签名字' adalah cara paling ringkas dan umum",
+          "写": "✗ '写' terlalu umum, tidak menunjukkan tanda tangan resmi",
+          "签字": "✗ '签字' benar tapi redundan dengan '名字'",
+          "签   ": "✗ '签名' sama dengan '签字', redundan",
+          "填": "✗ '填' untuk mengisi formulir, bukan tanda tangan",
+          "登记": "✗ '登记' untuk mendaftar/mencatat, berbeda dari tanda tangan"
+        }
+      },
+      
+      { id: 91, sentence: "他______学习好，体育也很棒。", answer: "  仅", distractors: ["不但", "不只", "除了", "既", "又"], pinyin: "bùjǐn", meaning: "tidak hanya", explanation: "'不仅...也...' adalah struktur untuk menunjukkan dua aspek positif.",
+        optionExplanations: {
+          "不仅": "✓ Benar - '不仅...也...' adalah struktur standar paling umum",
+          "不但": "✗ '不但' mirip tapi '不仅' lebih umum dalam konteks ini",
+          "不只": "✗ '不只' lebih kasual dari '不仅'",
+          "除了": "✗ '   了...还...' struktur berbeda, menekankan tambahan",
+          "既": "✗ '既...也...' benar tapi '不仅' lebih natural",
+          "又": "✗ '又' tidak bisa di awal kalimat sendirian"
+        }
+      },
+      { id: 92, sentence: "______天气不好，我们还是决定按计划出发。", answer: "尽管", distractors: ["虽然", "即使", "就算", "哪怕", "纵然"], pinyin: "jǐnguǎn", meaning: "meskipun", explanation: "'尽管' menunjukkan kondisi yang tidak menghalangi keputusan.",
+        optionExplanations: {
+          "尽管": "✓ Benar - '尽管...还是...' adalah struktur formal untuk konsesi",
+          "虽然": "✗ '虽然' mirip tapi '尽管' lebih formal",
+          "即使": "✗ '即使' untuk kondisi hipotesis, cuaca sudah fakta",
+          "就算": "✗ '就算' sama dengan '即使', untuk hipotesis",
+          "哪怕": "✗ '哪怕' untuk konsesi ekstrem, terlalu dramatis",
+          "纵然": "✗ '纵然' sangat sastrawi dan kuno"
+        }
+      },
+      { id: 93, sentence: "你______按时完成作业，______不能看电视。", answer: "只有...才...", distractors: ["除非...否则...", "如果...就...", "要是...才...", "一旦...就...", "假如...便..."], pinyin: "zhǐyǒu...cái...", meaning: "hanya jika...baru...", explanation: "'只有...才...' menunjukkan kondisi yang harus dipenuhi.",
+        optionExplanations: {
+          "只有...才...": "✓ Benar - '   有...才...' menunjukkan syarat tunggal yang harus dipenuhi",
+          "除非...否则...": "✗ '除非...否则...' makna terbalik (kecuali selesai, tidak bisa nonton)",
+          "如果...就...": "✗ '如果...就...' kondisional biasa, tidak menekankan keharusan",
+          "要是...才...": "✗ '要是...才...' tidak natural, '要是' tidak cocok dengan '才'",
+          "一旦...就...": "✗ '一旦...就...' untuk akibat langsung, bukan syarat",
+          "假如...便...": "✗ '假如...便...' terlalu formal dan sastrawi"
+        }
+      },
+      { id: 94, sentence: "这件事______你直接负责，请尽快处理。", answer: "由", distractors: ["让", "要", "给", "叫", "请"], pinyin: "yóu", meaning: "oleh", explanation: "'由你负责' menunjukkan penugasan tanggung jawab kepada seseorang.",
+        optionExplanations: {
+          "由": "✓ Benar - '由...负责' adalah struktur baku untuk penugasan",
+          "让": "✗ '让' untuk membiarkan/meminta, tidak formal",
+          "要": "✗ '要' untuk 'harus', tidak menunjukkan penugasan",
+          "给": "✗ '给' untuk memberikan, tidak tepat dengan tanggung jawab",
+          "叫": "✗ '叫' untuk menyuruh, terlalu kasual",
+          "请": "✗ '请' untuk meminta, terlalu sopan untuk perintah"
+        }
+      },
+      { id: 95, sentence: "这个决定______到我们每个人的未来。", answer: "关系", distractors: ["联系", "涉及", "影响", "牵涉", "连接"], pinyin: "guānxì", meaning: "berkaitan", explanation: "'关系到' menunjukkan keputusan yang sangat penting untuk masa depan.",
+        optionExplanations: {
+          "关系": "✓ Benar - '关系到' menunjukkan hubungan penting dengan dampak besar",
+          "联系": "✗ '联系' untuk koneksi, tidak menekankan kepentingan",
+          "涉及": "✗ '涉及' untuk menyangkut, kurang menekankan dampak",
+          "影响": "✗ '影响' untuk mempengaruhi, berbeda dari 'berkaitan'",
+          "牵涉": "✗ '牵涉' untuk terlibat, sering konotasi negatif",
+          "连接": "✗ '连接' untuk menghubungkan fisik, tidak tepat"
+        }
+      },
+      { id: 96, sentence: "他看起来年轻，______已经四十岁了。", answer: "实际上", distractors: ["实际", "其实", "事实上", "真的", "确实"], pinyin: "shíjìshàng", meaning: "sebenarnya", explanation: "'实际上' menunjukkan fakta yang berbeda dari penampilan.",
+        optionExplanations: {
+          "实际上": "✓ Benar - '实   上' adalah cara formal menyatakan kenyataan berbeda",
+          "实际": "✗ '实际' butuh '上' untuk menjadi adverbia lengkap",
+          "其实": "✗ '其实' bisa digunakan tapi '实际上' lebih menekankan fakta",
+          "事实上": "✗ '事实上' sangat formal, untuk konteks serius",
+          "真的": "✗ '真的' terlalu kasual untuk konteks ini",
+          "确实": "✗ '确实' untuk konfirmasi, bukan kontras"
+        }
+      },
+      { id: 97, sentence: "______努力工作，才能获得成功。", answer: "只有", distractors: ["只要", "必须", "应该", "需要", "要"], pinyin: "zhǐyǒu", meaning: "hanya dengan", explanation: "'只有...才...' adalah struktur untuk menunjukkan syarat yang harus dipenuhi.",
+        optionExplanations: {
+          "只有": "✓ Benar - '只有...才...' menunjukkan syarat tunggal yang wajib",
+          "只要": "✗ '只要...就...' berbeda, '只要' menekankan cukup",
+          "必须": "✗ '必须' untuk keharusan, tidak membentuk struktur dengan '才'",
+          "应该": "✗ '应该' untuk seharusnya, tidak cukup kuat",
+          "需要": "✗ '需要' untuk butuh, tidak membentuk struktur lengkap",
+          "要": "✗ '要' terlalu singkat, tidak menekankan keharusan tunggal"
+        }
+      },
+      { id: 98, sentence: "你们先讨论，我______保持中立。", answer: "暂时", distractors: ["先", "目前", "现在", "当前", "临时"], pinyin: "zànshí", meaning: "sementara", explanation: "'暂时' menunjukkan posisi netral untuk sementara waktu.",
+        optionExplanations: {
+          "暂  ": "✓ Benar - '暂时' menunjukkan status sementara yang mungkin berubah",
+          "先": "✗ '先' untuk 'dulu', tidak menekankan sifat sementara",
+          "目前": "✗ '目前' untuk 'saat ini', lebih untuk fakta bukan niat",
+          "现在": "✗ '现在' sama dengan '目前', tidak menunjukkan sementara",
+          "当前": "✗ '   前' sangat formal, untuk laporan",
+          "临时": "✗ '临时' untuk darurat/mendadak, tidak tepat"
+        }
+      },
+      { id: 99, sentence: "他一进门，______发现气氛不对。", answer: "就", distractors: ["马上", "立刻", "立即", "便", "随即"], pinyin: "jiù", meaning: "segera/langsung", explanation: "'一...就...' menunjukkan tindakan yang terjadi segera setelah masuk.",
+        optionExplanations: {
+          "就": "✓ Benar - '一...就...' adalah struktur baku untuk aksi berurutan cepat",
+          "马上": "✗ '马上' bisa digunakan tapi '就' lebih natural dengan '一'",
+          "立刻": "✗ '立刻' mirip '马上', tapi tidak natural dengan '一'",
+          "立即": "✗ '立即' sangat formal, untuk dokumen",
+          "便": "✗ '便' sastrawi, terlalu formal untuk percakapan",
+          "随即": "✗ '随即' sangat formal, untuk narasi tertulis"
+        }
+      },
+      { id: 100, sentence: "这个计划______理论上可   ，但实践起来很难。", answer: "虽然", distractors: ["即使", "尽管", "纵然", "就算", "哪怕"], pinyin: "suīrán", meaning: "meskipun", explanation: "'虽然' menunjukkan kontras antara teori dan praktik.",
+        optionExplanations: {
+          "虽然": "✓ Benar - '虽然...但...' adalah struktur standar untuk kontras fakta",
+          "即使": "✗ '即使' untuk kondisi hipotesis, ini adalah fakta",
+          "尽管": "✗ '尽管' lebih formal dari '虽然'",
+          "纵然": "✗ '纵然' sangat sastrawi dan kuno",
+          "就算": "✗ '就算' untuk asumsi hipotesis, bukan fakta",
+          "哪怕": "✗ '哪怕' untuk konsesi ekstrem, terlalu dramatis"
+        }
+      }
+    ];
+
+    // Game State
+    let gameState = {
+      currentPacket: 1,
+      currentPage: 1,
+      currentQuestionIndex: 0,
+      totalAnswered: 0,
+      correctCount: 0,
+      wrongCount: 0,
+      timeRemaining: 80 * 60,
+      timerInterval: null,
+      questions: [],
+      answeredOnPage: 0,
+      score: 0
+    };
+
+    // Default Config
+    const defaultConfig = {
+      game_title: "HSK 4 互动填空游戏",
+      correct_label: "答案",
+      explanation_label: "Penjelasan",
+      primary_color: "#4f46e5",
+      secondary_color: "#f8fafc",
+      text_color: "#1f2937",
+      correct_color: "#10b981",
+      incorrect_color: "#ef4444"
+    };
+
+    let config = { ...defaultConfig };
+
+    // Initialize Element SDK
+    if (window.elementSdk) {
+      window.elementSdk.init({
+        defaultConfig,
+        onConfigChange: async (newConfig) => {
+          config = { ...defaultConfig, ...newConfig };
+          applyConfig();
+        },
+        mapToCapabilities: (cfg) => ({
+          recolorables: [
+            {
+              get: () => cfg.primary_color || defaultConfig.primary_color,
+              set: (v) => { cfg.primary_color = v; window.elementSdk.setConfig({ primary_color: v }); }
+            },
+            {
+              get: () => cfg.secondary_color || defaultConfig.secondary_color,
+              set: (v) => { cfg.secondary_color = v; window.elementSdk.setConfig({ secondary_color: v }); }
+            },
+            {
+              get: () => cfg.text_color || defaultConfig.text_color,
+              set: (v) => { cfg.text_color = v; window.elementSdk.setConfig({ text_color: v }); }
+            },
+            {
+              get: () => cfg.correct_color || defaultConfig.correct_color,
+              set: (v) => { cfg.correct_color = v; window.elementSdk.setConfig({ correct_color: v }); }
+            },
+            {
+              get: () => cfg.incorrect_color || defaultConfig.incorrect_color,
+              set: (v) => { cfg.incorrect_color = v; window.elementSdk.setConfig({ incorrect_color: v }); }
+            }
+          ],
+          borderables: [],
+          fontEditable: undefined,
+          fontSizeable: undefined
+        }),
+        mapToEditPanelValues: (cfg) => new Map([
+          ["game_title", cfg.game_title || defaultConfig.game_title],
+          ["correct_label", cfg.correct_label || defaultConfig.correct_label],
+          ["explanation_label", cfg.explanation_label || defaultConfig.explanation_label]
+        ])
+      });
+    }
+
+    function applyConfig() {
+      const mainTitle = document.getElementById('main-title');
+      if (mainTitle) {
+        mainTitle.textContent = config.game_title || defaultConfig.game_title;
+      }
+    }
+
+    // Shuffle Array
+    function shuffleArray(array) {
+      const newArray = [...array];
+      for (let i = newArray.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+      }
+      return newArray;
+    }
+
+    // Generate Packet Selector
+    function generatePacketSelector() {
+      const container = document.getElementById('packet-selector');
+      container.innerHTML = '';
+      for (let i = 1; i <= 10; i++) {
+        const btn = document.createElement('button');
+        btn.className = `py-2 px-4 rounded-lg font-medium transition-all ${i === 1 ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`;
+        btn.textContent = i;
+        btn.onclick = () => selectPacket(i);
+        container.appendChild(btn);
+      }
+    }
+
+    function selectPacket(packet) {
+      gameState.currentPacket = packet;
+      const buttons = document.querySelectorAll('#packet-selector button');
+      buttons.forEach((btn, index) => {
+        if (index + 1 === packet) {
+          btn.className = 'py-2 px-4 rounded-lg font-medium transition-all bg-gradient-to-r from-blue-500 to-indigo-600 text-white';
+        } else {
+          btn.className = 'py-2 px-4 rounded-lg font-medium transition-all bg-gray-100 text-gray-700 hover:bg-gray-200';
+        }
+      });
+    }
+
+    // Initialize Game
+    function initGame() {
+      gameState.questions = shuffleArray([...questionBank]);
+      gameState.currentPage = 1;
+      gameState.currentQuestionIndex = 0;
+      gameState.totalAnswered = 0;
+      gameState.correctCount = 0;
+      gameState.wrongCount = 0;
+      gameState.answeredOnPage = 0;
+      gameState.score = 0;
+      gameState.timeRemaining = 80 * 60;
+
+      document.getElementById('start-screen').classList.add('hidden');
+      document.getElementById('game-screen').classList.remove('hidden');
+      document.getElementById('results-screen').classList.add('hidden');
+
+      document.getElementById('current-packet').textContent = gameState.currentPacket;
+      
+      startTimer();
+      renderPage();
+    }
+
+    function startTimer() {
+      if (gameState.timerInterval) {
+        clearInterval(gameState.timerInterval);
+      }
+      
+      gameState.timerInterval = setInterval(() => {
+        gameState.timeRemaining--;
+        updateTimerDisplay();
+        
+        if (gameState.timeRemaining <= 0) {
+          clearInterval(gameState.timerInterval);
+          endGame();
+        }
+      }, 1000);
+    }
+
+    function updateTimerDisplay() {
+      const minutes = Math.floor(gameState.timeRemaining / 60);
+      const seconds = gameState.timeRemaining % 60;
+      const display = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+      const timerElement = document.getElementById('timer-display');
+      timerElement.textContent = display;
+      
+      if (gameState.timeRemaining <= 300) {
+        timerElement.classList.add('text-red-600', 'timer-warning');
+      }
+    }
+
+    function renderPage() {
+      const container = document.getElementById('question-container');
+      container.innerHTML = '';
+      
+      const startIndex = (gameState.currentPage - 1) * 10;
+      const pageQuestions = gameState.questions.slice(startIndex, startIndex + 10);
+      
+      gameState.answeredOnPage = 0;
+      gameState.currentQuestionIndex = startIndex;
+      
+      document.getElementById('current-page').textContent = gameState.currentPage;
+      
+      document.getElementById('next-question-btn').classList.add('hidden');
+      document.getElementById('next-page-btn').classList.add('hidden');
+      
+      renderQuestion(pageQuestions[0], 0);
+    }
+
+    function renderQuestion(question, indexOnPage) {
+      const container = document.getElementById('question-container');
+      container.innerHTML = '';
+      
+      const questionNum = (gameState.currentPage - 1) * 10 + indexOnPage + 1;
+      
+      const card = document.createElement('div');
+      card.className = 'glass-card rounded-2xl p-6 md:p-8 soft-shadow fade-in-up';
+      card.innerHTML = `
+        <div class="flex items-center gap-3 mb-6">
+          <span class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white w-10 h-10 rounded-xl flex items-center justify-center font-bold">${questionNum}</span>
+          <span class="text-gray-500">/ 100</span>
+        </div>
+        
+        <div class="mb-8">
+          <p class="hanzi text-xl md:text-2xl text-gray-800 leading-relaxed" id="sentence-${indexOnPage}">
+            ${formatSentence(question.sentence)}
+          </p>
+        </div>
+        
+        <div class="mb-6">
+          <p class="text-gray-500 text-sm mb-3">选择正确答案 (Pilih jawaban yang benar):</p>
+          <div class="grid grid-cols-2 gap-3" id="options-${indexOnPage}">
+            ${generateOptions(question, indexOnPage)}
+          </div>
+        </div>
+        
+        <div id="feedback-${indexOnPage}" class="hidden mt-6 p-6 rounded-xl">
+        </div>
+      `;
+      
+      container.appendChild(card);
+      
+      setupDragAndDrop(question, indexOnPage);
+      updateProgress();
+    }
+
+    function formatSentence(sentence) {
+      return sentence.replace('______', '<span class="drop-zone inline-flex" id="drop-zone">______</span>');
+    }
+
+    function generateOptions(question, indexOnPage) {
+      // Only take first 3 distractors to make 4 options total (1 correct + 3 distractors)
+      const allOptions = shuffleArray([question.answer, ...question.distractors.slice(0, 3)]);
+      return allOptions.map((opt, i) => `
+        <div class="answer-card hanzi bg-white border-2 border-gray-200 rounded-xl p-4 text-center text-xl font-medium hover:border-blue-400 hover:bg-blue-50 cursor-pointer transition-all"
+             draggable="true"
+             data-option="${opt}"
+             data-index="${i}"
+             onclick="selectAnswer('${opt}', ${indexOnPage}, '${question.answer}')">
+          ${opt}
+        </div>
+      `).join('');
+    }
+
+    function setupDragAndDrop(question, indexOnPage) {
+      const options = document.querySelectorAll(`#options-${indexOnPage} .answer-card`);
+      const dropZone = document.getElementById('drop-zone');
+      
+      options.forEach(option => {
+        option.addEventListener('dragstart', (e) => {
+          e.dataTransfer.setData('text/plain', option.dataset.option);
+          option.classList.add('selected');
+        });
+        
+        option.addEventListener('dragend', () => {
+          option.classList.remove('selected');
+        });
+      });
+      
+      if (dropZone) {
+        dropZone.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          dropZone.classList.add('drag-over');
+        });
+        
+        dropZone.addEventListener('dragleave', () => {
+          dropZone.classList.remove('drag-over');
+        });
+        
+        dropZone.addEventListener('drop', (e) => {
+          e.preventDefault();
+          dropZone.classList.remove('drag-over');
+          const answer = e.dataTransfer.getData('text/plain');
+          selectAnswer(answer, indexOnPage, question.answer);
+        });
+      }
+    }
+
+    window.selectAnswer = function(selected, indexOnPage, correctAnswer) {
+      const isCorrect = selected === correctAnswer;
+      const question = gameState.questions[(gameState.currentPage - 1) * 10 + indexOnPage];
+      
+      const options = document.querySelectorAll(`#options-${indexOnPage} .answer-card`);
+      options.forEach(opt => {
+        opt.onclick = null;
+        opt.draggable = false;
+        opt.classList.remove('cursor-pointer', 'hover:border-blue-400', 'hover:bg-blue-50');
+        opt.classList.add('cursor-default');
+        
+        if (opt.dataset.option === correctAnswer) {
+          opt.classList.add('correct');
+        } else if (opt.dataset.option === selected && !isCorrect) {
+          opt.classList.add('incorrect');
+        }
+      });
+      
+      const dropZone = document.getElementById('drop-zone');
+      if (dropZone) {
+        dropZone.innerHTML = `<span class="hanzi font-bold ${isCorrect ? 'text-green-600' : 'text-red-600'}">${selected}</span>`;
+        dropZone.classList.add('filled');
+        dropZone.classList.remove('drop-zone');
+        dropZone.classList.add(isCorrect ? 'border-green-500' : 'border-red-500');
+      }
+      
+      gameState.totalAnswered++;
+      gameState.answeredOnPage++;
+      if (isCorrect) {
+        gameState.correctCount++;
+        gameState.score += 10;
+      } else {
+        gameState.wrongCount++;
+      }
+      
+      showFeedback(question, isCorrect, indexOnPage);
+      
+      document.getElementById('correct-count').textContent = gameState.correctCount;
+      document.getElementById('wrong-count').textContent = gameState.wrongCount;
+      updateProgress();
+      
+      showNavigation(indexOnPage);
+      playSound(isCorrect);
+    };
+
+    function showFeedback(question, isCorrect, indexOnPage) {
+      const feedback = document.getElementById(`feedback-${indexOnPage}`);
+      feedback.classList.remove('hidden');
+      feedback.className = `mt-6 p-6 rounded-xl slide-in ${isCorrect ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`;
+      
+      const correctLabel = config.correct_label || defaultConfig.correct_label;
+      const explanationLabel = config.explanation_label || defaultConfig.explanation_label;
+      
+      let optionsExplHTML = '';
+      if (question.optionExplanations) {
+        // Only show explanations for the 4 displayed options (1 correct + 3 distractors)
+        const allOptions = [question.answer, ...question.distractors.slice(0, 3)];
+        const explanations = allOptions.map(opt => {
+          const expl = question.optionExplanations[opt] || '-';
+          const isCorrectOpt = opt === question.answer;
+          return `
+            <div class="flex items-start gap-2 p-3 rounded-lg ${isCorrectOpt ? 'bg-green-50 border border-green-200' : 'bg-gray-50'}">
+              <span class="hanzi font-bold text-gray-800 min-w-[80px] flex-shrink-0">${opt}</span>
+              <span class="text-sm text-gray-700 leading-relaxed">${expl}</span>
+            </div>
+          `;
+        }).join('');
+        
+        optionsExplHTML = `
+          <div class="bg-white rounded-lg p-4 mb-4 border border-gray-200">
+            <p class="text-gray-700 font-semibold mb-3 flex items-center gap-2">
+              <span>📝</span>
+              <span>Penjelasan Setiap Pilihan:</span>
+            </p>
+            <div class="space-y-2">
+              ${explanations}
+            </div>
+          </div>
+        `;
+      }
+      
+      feedback.innerHTML = `
+        <div class="flex items-center gap-3 mb-4">
+          <span class="text-2xl">${isCorrect ? '✅' : '❌'}</span>
+          <span class="font-bold ${isCorrect ? 'text-green-700' : 'text-red-700'}">${isCorrect ? 'Benar!' : 'Salah!'}</span>
+        </div>
+        
+        <div class="bg-white rounded-lg p-4 mb-4">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+            <div>
+              <span class="text-gray-500 text-sm">${correctLabel}</span>
+              <p class="hanzi text-2xl font-bold text-gray-800">${question.answer}</p>
+            </div>
+            <div>
+              <span class="text-gray-500 text-sm">Pinyin</span>
+              <p class="text-xl font-medium text-gray-700">${question.pinyin}</p>
+            </div>
+            <div>
+              <span class="text-gray-500 text-sm">Arti</span>
+              <p class="text-xl font-medium text-gray-700">${question.meaning}</p>
+            </div>
+          </div>
+        </div>
+        
+        ${optionsExplHTML}
+        
+        <div class="bg-blue-50 rounded-lg p-4 border border-blue-200">
+          <span class="text-gray-700 font-semibold">${explanationLabel}:</span>
+          <p class="text-gray-700 mt-2 leading-relaxed">${question.explanation}</p>
+        </div>
+      `;
+    }
+
+    function showNavigation(indexOnPage) {
+      const nextQuestionBtn = document.getElementById('next-question-btn');
+      const nextPageBtn = document.getElementById('next-page-btn');
+      
+      if (gameState.totalAnswered >= 100) {
+        nextQuestionBtn.classList.add('hidden');
+        nextPageBtn.classList.remove('hidden');
+        nextPageBtn.textContent = '🏆 Lihat Hasil';
+        nextPageBtn.onclick = endGame;
+      } else if (gameState.answeredOnPage >= 10) {
+        nextQuestionBtn.classList.add('hidden');
+        nextPageBtn.classList.remove('hidden');
+        nextPageBtn.textContent = 'Halaman Berikutnya ⏭';
+        nextPageBtn.onclick = nextPage;
+      } else {
+        nextQuestionBtn.classList.remove('hidden');
+        nextPageBtn.classList.add('hidden');
+        nextQuestionBtn.onclick = () => nextQuestion(indexOnPage);
+      }
+    }
+
+    function nextQuestion(currentIndex) {
+      const nextIndex = currentIndex + 1;
+      const question = gameState.questions[(gameState.currentPage - 1) * 10 + nextIndex];
+      renderQuestion(question, nextIndex);
+    }
+
+    function nextPage() {
+      gameState.currentPage++;
+      renderPage();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function updateProgress() {
+      const percentage = (gameState.totalAnswered / 100) * 100;
+      document.getElementById('progress-bar').style.width = `${percentage}%`;
+      document.getElementById('progress-text').textContent = `${gameState.totalAnswered}/100`;
+    }
+
+    function playSound(isCorrect) {
+      const body = document.body;
+      body.style.transition = 'background-color 0.3s ease';
+      if (isCorrect) {
+        body.style.backgroundColor = 'rgba(16, 185, 129, 0.1)';
+      } else {
+        body.style.backgroundColor = 'rgba(239, 68, 68, 0.1)';
+      }
+      setTimeout(() => {
+        body.style.backgroundColor = '';
+      }, 300);
+    }
+
+    function endGame() {
+      clearInterval(gameState.timerInterval);
+      
+      const timeUsed = 80 * 60 - gameState.timeRemaining;
+      const minutes = Math.floor(timeUsed / 60);
+      const seconds = timeUsed % 60;
+      
+      document.getElementById('final-score').textContent = gameState.score;
+      document.getElementById('final-time').textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+      document.getElementById('final-correct').textContent = gameState.correctCount;
+      document.getElementById('final-wrong').textContent = gameState.wrongCount;
+      
+      document.getElementById('game-screen').classList.add('hidden');
+      document.getElementById('results-screen').classList.remove('hidden');
+    }
+
+    document.getElementById('start-btn').onclick = initGame;
+    
+    document.getElementById('restart-btn').onclick = () => {
+      initGame();
+    };
+    
+    document.getElementById('home-btn').onclick = () => {
+      document.getElementById('results-screen').classList.add('hidden');
+      document.getElementById('start-screen').classList.remove('hidden');
+      clearInterval(gameState.timerInterval);
+    };
+
+    generatePacketSelector();
+    applyConfig();
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9c65457022f84ab5',t:'MTc2OTgyMTIxNy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
